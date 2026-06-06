@@ -1,0 +1,345 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { ensureUserProfile } from "@/lib/profile";
+import { createClient } from "@/lib/supabase/server";
+import { normalizeUsername } from "@/lib/utils";
+import {
+  getAudioContentType,
+  validateAudio,
+  validateImage,
+  validateUsername,
+} from "@/lib/validation";
+import type { ProfileTheme } from "@/types/database";
+
+export type DashboardState = {
+  error?: string;
+  success?: string;
+};
+
+async function getOwnedProfile() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    redirect("/login");
+  }
+
+  const resolvedProfile = profile ?? (await ensureUserProfile(supabase, user));
+
+  if (!resolvedProfile) {
+    redirect("/login");
+  }
+
+  return { supabase, profile: resolvedProfile };
+}
+
+function getColor(formData: FormData, key: string, fallback: string) {
+  const value = String(formData.get(key) ?? fallback).trim();
+  return /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
+}
+
+function getRangeNumber(
+  formData: FormData,
+  key: string,
+  fallback: number,
+  min: number,
+  max: number,
+) {
+  const value = Number(formData.get(key) ?? fallback);
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+
+  return Math.min(max, Math.max(min, value));
+}
+
+function getCheckbox(formData: FormData, key: string) {
+  return formData.get(key) === "on";
+}
+
+function getStoragePathFromPublicUrl(url?: string | null) {
+  if (!url) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+    const marker = "/storage/v1/object/public/profile-media/";
+    const markerIndex = parsedUrl.pathname.indexOf(marker);
+
+    if (markerIndex === -1) {
+      return null;
+    }
+
+    return decodeURIComponent(
+      parsedUrl.pathname.slice(markerIndex + marker.length),
+    );
+  } catch {
+    return null;
+  }
+}
+
+async function removeOldProfileMedia(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  url?: string | null,
+) {
+  const oldPath = getStoragePathFromPublicUrl(url);
+  if (!oldPath) {
+    return;
+  }
+
+  await supabase.storage.from("profile-media").remove([oldPath]);
+}
+
+export async function updateProfileAction(
+  _prevState: DashboardState,
+  formData: FormData,
+): Promise<DashboardState> {
+  const { supabase, profile } = await getOwnedProfile();
+  const username = normalizeUsername(String(formData.get("username") ?? ""));
+  const usernameError = validateUsername(username);
+
+  if (usernameError) {
+    return { error: usernameError };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      username,
+      display_name: String(formData.get("display_name") ?? "").trim(),
+      bio: String(formData.get("bio") ?? "").trim(),
+      theme: String(formData.get("theme") ?? "dark") as ProfileTheme,
+      accent_color: getColor(formData, "accent_color", "#ffffff"),
+      page_background_color: getColor(
+        formData,
+        "page_background_color",
+        "#050507",
+      ),
+      panel_background_color: getColor(
+        formData,
+        "panel_background_color",
+        "#111113",
+      ),
+      text_color: getColor(formData, "text_color", "#ffffff"),
+      muted_text_color: getColor(formData, "muted_text_color", "#d4d4d8"),
+      button_background_color: getColor(
+        formData,
+        "button_background_color",
+        "#ffffff",
+      ),
+      button_text_color: getColor(formData, "button_text_color", "#ffffff"),
+      header_enabled: getCheckbox(formData, "header_enabled"),
+      header_background_style: String(
+        formData.get("header_background_style") ?? "gradient",
+      ).trim(),
+      header_color: getColor(formData, "header_color", "#74d9bf"),
+      header_color_to: getColor(formData, "header_color_to", "#2f9d8f"),
+      panel_visible: getCheckbox(formData, "panel_visible"),
+      links_icon_only: getCheckbox(formData, "links_icon_only"),
+      background_blur: getRangeNumber(formData, "background_blur", 10, 0, 40),
+      panel_opacity: getRangeNumber(formData, "panel_opacity", 70, 10, 100),
+      button_opacity: getRangeNumber(formData, "button_opacity", 12, 0, 100),
+      background_style: String(formData.get("background_style") ?? "soft").trim(),
+      button_style: String(formData.get("button_style") ?? "glass").trim(),
+      font_style: String(formData.get("font_style") ?? "clean").trim(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", profile.id);
+
+  if (error) {
+    return {
+      error:
+        error.code === "23505"
+          ? "Bu kullanıcı adı zaten alınmış."
+          : `Profil güncellenemedi: ${error.message}`,
+    };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
+  revalidatePath(`/${username}`);
+  return { success: "Profil güncellendi." };
+}
+
+export async function uploadImageAction(
+  _prevState: DashboardState,
+  formData: FormData,
+): Promise<DashboardState> {
+  const { supabase, profile } = await getOwnedProfile();
+  const field = String(formData.get("field"));
+  const file = formData.get("file");
+
+  if (field !== "avatar_url" && field !== "banner_url") {
+    return { error: "Geçersiz görsel alanı." };
+  }
+
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Lütfen bir görsel seçin." };
+  }
+
+  const imageError = validateImage(file);
+  if (imageError) {
+    return { error: imageError };
+  }
+
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "png";
+  const path = `${profile.user_id}/${field}-${Date.now()}.${extension}`;
+  const { error: uploadError } = await supabase.storage
+    .from("profile-media")
+    .upload(path, file, {
+      contentType: file.type,
+      upsert: true,
+    });
+
+  if (uploadError) {
+    return { error: "Görsel yüklenemedi." };
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("profile-media").getPublicUrl(path);
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ [field]: publicUrl, updated_at: new Date().toISOString() })
+    .eq("id", profile.id);
+
+  if (error) {
+    return { error: "Profil görseli kaydedilemedi." };
+  }
+
+  await removeOldProfileMedia(supabase, profile[field]);
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
+  return { success: "Görsel yüklendi." };
+}
+
+export async function uploadMusicAction(
+  _prevState: DashboardState,
+  formData: FormData,
+): Promise<DashboardState> {
+  const { supabase, profile } = await getOwnedProfile();
+  const file = formData.get("file");
+
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Lütfen bir şarkı seçin." };
+  }
+
+  const audioError = validateAudio(file);
+  if (audioError) {
+    return { error: audioError };
+  }
+
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "mp3";
+  const path = `${profile.user_id}/music-${Date.now()}.${extension}`;
+  const contentType = getAudioContentType(file);
+  const { error: uploadError } = await supabase.storage
+    .from("profile-media")
+    .upload(path, file, {
+      contentType,
+      upsert: true,
+    });
+
+  if (uploadError) {
+    return {
+      error: `Şarkı yüklenemedi: ${uploadError.message}. Storage MIME ayarlarını kontrol et.`,
+    };
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("profile-media").getPublicUrl(path);
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ music_url: publicUrl, updated_at: new Date().toISOString() })
+    .eq("id", profile.id);
+
+  if (error) {
+    return { error: "Şarkı profile kaydedilemedi." };
+  }
+
+  await removeOldProfileMedia(supabase, profile.music_url);
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
+  return { success: "Şarkı yüklendi." };
+}
+
+export async function removeMusicAction(): Promise<void> {
+  const { supabase, profile } = await getOwnedProfile();
+
+  await supabase
+    .from("profiles")
+    .update({ music_url: null, updated_at: new Date().toISOString() })
+    .eq("id", profile.id);
+
+  await removeOldProfileMedia(supabase, profile.music_url);
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
+}
+
+export async function addLinkAction(formData: FormData) {
+  const { supabase, profile } = await getOwnedProfile();
+  const title = String(formData.get("title") ?? "").trim();
+  const url = String(formData.get("url") ?? "").trim();
+  const icon = String(formData.get("icon") ?? "").trim();
+
+  if (!title || !url) {
+    return;
+  }
+
+  const { count } = await supabase
+    .from("profile_links")
+    .select("*", { count: "exact", head: true })
+    .eq("profile_id", profile.id);
+
+  await supabase.from("profile_links").insert({
+    profile_id: profile.id,
+    title,
+    url,
+    icon,
+    position: count ?? 0,
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
+}
+
+export async function deleteLinkAction(formData: FormData) {
+  const { supabase, profile } = await getOwnedProfile();
+  const id = String(formData.get("id") ?? "");
+  await supabase.from("profile_links").delete().eq("id", id);
+  revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
+}
+
+export async function reorderLinksAction(ids: string[]) {
+  const { supabase, profile } = await getOwnedProfile();
+
+  await Promise.all(
+    ids.map((id, position) =>
+      supabase.from("profile_links").update({ position }).eq("id", id),
+    ),
+  );
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
+}
