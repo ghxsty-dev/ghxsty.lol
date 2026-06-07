@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { THEMES } from "@/lib/themes";
 import { getLinkIcon } from "@/lib/link-icons";
 import { ProfileAudio } from "@/components/profile/profile-audio";
+import { ProfileShare } from "@/components/profile/profile-share";
 import { ProfileVote } from "@/components/profile/profile-vote";
 import type { ProfileVoteScore, PublicProfile } from "@/types/database";
 
@@ -112,6 +113,12 @@ export function ProfileView({
         />
       ) : null}
       <div className="absolute inset-0 z-0 bg-black/35" />
+      <ProfileShare
+        username={profile.username}
+        displayName={displayName}
+        avatarUrl={profile.avatar_url}
+        accentColor={accentColor}
+      />
 
       <section className="relative z-10 mx-auto flex w-full max-w-xl flex-col items-center">
         <div
