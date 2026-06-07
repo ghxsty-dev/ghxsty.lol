@@ -85,6 +85,8 @@ export function ProfileView({
   const backgroundBlur = Math.min(40, Math.max(0, profile.background_blur ?? 10));
   const panelOpacity = Math.min(100, Math.max(10, profile.panel_opacity ?? 70));
   const buttonOpacity = Math.min(100, Math.max(0, profile.button_opacity ?? 12));
+  const panelRadius = Math.min(32, Math.max(0, profile.panel_radius ?? 8));
+  const buttonRadius = Math.min(32, Math.max(0, profile.button_radius ?? 6));
 
   return (
     <main
@@ -130,6 +132,7 @@ export function ProfileView({
               : "border border-transparent bg-transparent shadow-none",
           )}
           style={{
+            borderRadius: `${panelRadius}px`,
             backgroundColor: panelVisible
               ? `${panelBackgroundColor}${Math.round((panelOpacity / 100) * 255)
                   .toString(16)
@@ -190,7 +193,7 @@ export function ProfileView({
             initialVote={currentVote ?? null}
           />
 
-          <DiscordCard profile={profile} />
+          <DiscordCard profile={profile} radius={buttonRadius} />
 
           {profile.music_url ? (
             <div className="relative mt-6">
@@ -229,6 +232,7 @@ export function ProfileView({
                     getButtonStyle(profile.button_style),
                   )}
                   style={{
+                    borderRadius: linksIconOnly ? undefined : `${buttonRadius}px`,
                     backgroundColor:
                       linksIconOnly
                         ? "transparent"

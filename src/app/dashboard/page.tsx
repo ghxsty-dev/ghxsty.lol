@@ -99,7 +99,7 @@ export default async function DashboardPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ProfileEditor profile={typedProfile} />
+                <ProfileEditor key={typedProfile.updated_at} profile={typedProfile} />
               </CardContent>
             </Card>
 
@@ -123,7 +123,11 @@ export default async function DashboardPage() {
                 <CardDescription>Public profil görünümünün kompakt hali.</CardDescription>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <ProfilePreview profile={typedProfile} links={links} />
+                <ProfilePreview
+                  key={typedProfile.updated_at}
+                  profile={typedProfile}
+                  links={links}
+                />
               </CardContent>
             </Card>
           </aside>

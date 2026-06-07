@@ -42,6 +42,8 @@ export type Profile = {
   background_blur: number | null;
   panel_opacity: number | null;
   button_opacity: number | null;
+  panel_radius: number | null;
+  button_radius: number | null;
   background_style: string | null;
   button_style: string | null;
   font_style: string | null;

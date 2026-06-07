@@ -9,11 +9,8 @@ export type DiscordUser = {
   accent_color?: number | null;
 };
 
-export function getDiscordRedirectUri() {
-  return (
-    process.env.DISCORD_REDIRECT_URI ??
-    `${getSiteUrl()}/api/discord/callback`
-  );
+export function getDiscordRedirectUri(origin = getSiteUrl()) {
+  return `${origin.replace(/\/$/, "")}/api/discord/callback`;
 }
 
 export function getDiscordAvatarUrl(user: DiscordUser) {

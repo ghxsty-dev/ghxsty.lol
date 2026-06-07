@@ -37,6 +37,8 @@ export function ProfilePreview({
   const panelVisible = profile.panel_visible ?? true;
   const linksIconOnly = profile.links_icon_only ?? false;
   const shownLinks = links.slice(0, 6);
+  const panelRadius = Math.min(32, Math.max(0, profile.panel_radius ?? 8));
+  const buttonRadius = Math.min(32, Math.max(0, profile.button_radius ?? 6));
 
   return (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-black">
@@ -78,6 +80,7 @@ export function ProfilePreview({
                 : "border border-transparent",
             )}
             style={{
+              borderRadius: `${panelRadius}px`,
               backgroundColor: panelVisible
                 ? withAlpha(
                     profile.panel_background_color,
@@ -140,6 +143,7 @@ export function ProfilePreview({
                     ? "rounded-md border border-white/10 bg-black/25"
                     : "bg-transparent",
                 )}
+                style={{ borderRadius: `${buttonRadius}px` }}
               >
                 <div className="mx-auto flex max-w-[60%] items-center justify-center gap-2 text-xs font-semibold">
                   <Music2 className="h-3.5 w-3.5" />
@@ -173,6 +177,7 @@ export function ProfilePreview({
                         : "h-10 gap-2 rounded-md border px-3",
                     )}
                     style={{
+                      borderRadius: linksIconOnly ? undefined : `${buttonRadius}px`,
                       backgroundColor:
                         linksIconOnly
                           ? "transparent"

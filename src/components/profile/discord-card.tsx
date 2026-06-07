@@ -23,7 +23,11 @@ type LanyardData = {
   };
 };
 
-function getStatusLabel(status?: string) {
+function getStatusLabel(status?: string, hasPresence = true) {
+  if (!hasPresence) {
+    return "Durum alınamıyor";
+  }
+
   switch (status) {
     case "online":
       return "Online";
@@ -70,7 +74,13 @@ async function getPresence(discordId: string, enabled: boolean) {
   }
 }
 
-export async function DiscordCard({ profile }: { profile: Profile }) {
+export async function DiscordCard({
+  profile,
+  radius,
+}: {
+  profile: Profile;
+  radius?: number;
+}) {
   if (!profile.discord_id) {
     return null;
   }
@@ -88,7 +98,10 @@ export async function DiscordCard({ profile }: { profile: Profile }) {
   );
 
   return (
-    <div className="relative mt-6 overflow-hidden rounded-md border border-white/10 bg-[#5865f2]/15 p-4 text-left shadow-lg shadow-black/15 backdrop-blur-xl">
+    <div
+      className="relative mt-6 overflow-hidden rounded-md border border-white/10 bg-[#5865f2]/15 p-4 text-left shadow-lg shadow-black/15 backdrop-blur-xl"
+      style={{ borderRadius: radius === undefined ? undefined : `${radius}px` }}
+    >
       {profile.discord_banner_url ? (
         <Image
           src={profile.discord_banner_url}
@@ -123,7 +136,7 @@ export async function DiscordCard({ profile }: { profile: Profile }) {
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-white">{displayName}</p>
           <p className="truncate text-xs text-zinc-300">
-            @{profile.discord_username} · {getStatusLabel(status)}
+            @{profile.discord_username} · {getStatusLabel(status, Boolean(presence))}
           </p>
         </div>
       </div>

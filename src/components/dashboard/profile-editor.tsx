@@ -87,7 +87,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
     if (profileState.success || uploadState.success || musicState.success) {
       router.refresh();
     }
-  }, [musicState.success, profileState.success, router, uploadState.success]);
+  }, [musicState, profileState, router, uploadState]);
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -274,6 +274,28 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="panel_radius">Panel köşe yumuşaklığı</Label>
+            <Input
+              id="panel_radius"
+              name="panel_radius"
+              type="range"
+              min="0"
+              max="32"
+              defaultValue={profile.panel_radius ?? 8}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="button_radius">Link köşe yumuşaklığı</Label>
+            <Input
+              id="button_radius"
+              name="button_radius"
+              type="range"
+              min="0"
+              max="32"
+              defaultValue={profile.button_radius ?? 6}
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="button_style">Link butonları</Label>
             <Select
               id="button_style"
@@ -413,6 +435,8 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             <input type="hidden" name="background_blur" value={profile.background_blur ?? 10} />
             <input type="hidden" name="panel_opacity" value={profile.panel_opacity ?? 70} />
             <input type="hidden" name="button_opacity" value={profile.button_opacity ?? 12} />
+            <input type="hidden" name="panel_radius" value={profile.panel_radius ?? 8} />
+            <input type="hidden" name="button_radius" value={profile.button_radius ?? 6} />
             <input type="hidden" name="background_style" value={profile.background_style ?? "soft"} />
             <input type="hidden" name="button_style" value={profile.button_style ?? "glass"} />
             <input type="hidden" name="font_style" value={profile.font_style ?? "clean"} />

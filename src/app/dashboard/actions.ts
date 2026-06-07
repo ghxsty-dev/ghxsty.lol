@@ -216,6 +216,8 @@ export async function updateProfileAction(
       background_blur: getRangeNumber(formData, "background_blur", 10, 0, 40),
       panel_opacity: getRangeNumber(formData, "panel_opacity", 70, 10, 100),
       button_opacity: getRangeNumber(formData, "button_opacity", 12, 0, 100),
+      panel_radius: getRangeNumber(formData, "panel_radius", 8, 0, 32),
+      button_radius: getRangeNumber(formData, "button_radius", 6, 0, 32),
       background_style: String(formData.get("background_style") ?? "soft").trim(),
       button_style: String(formData.get("button_style") ?? "glass").trim(),
       font_style: String(formData.get("font_style") ?? "clean").trim(),

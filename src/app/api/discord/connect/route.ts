@@ -1,22 +1,22 @@
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getDiscordRedirectUri } from "@/lib/discord";
 import { createClient } from "@/lib/supabase/server";
-import { getSiteUrl } from "@/lib/utils";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const origin = request.nextUrl.origin;
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(new URL("/login?next=/dashboard", getSiteUrl()));
+    return NextResponse.redirect(new URL("/login?next=/dashboard", origin));
   }
 
   const clientId = process.env.DISCORD_CLIENT_ID;
   if (!clientId) {
-    return NextResponse.redirect(new URL("/dashboard?discord=missing-env", getSiteUrl()));
+    return NextResponse.redirect(new URL("/dashboard?discord=missing-env", origin));
   }
 
   const state = crypto.randomUUID();
@@ -31,7 +31,7 @@ export async function GET() {
 
   const params = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: getDiscordRedirectUri(),
+    redirect_uri: getDiscordRedirectUri(origin),
     response_type: "code",
     scope: "identify",
     state,

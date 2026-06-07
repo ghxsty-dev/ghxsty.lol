@@ -51,6 +51,8 @@ create table if not exists public.profiles (
   background_blur integer default 10,
   panel_opacity integer default 70,
   button_opacity integer default 12,
+  panel_radius integer default 8,
+  button_radius integer default 6,
   background_style text default 'soft',
   button_style text default 'glass',
   font_style text default 'clean',
@@ -347,6 +349,8 @@ alter table public.profiles add column if not exists links_icon_only boolean def
 alter table public.profiles add column if not exists background_blur integer default 10;
 alter table public.profiles add column if not exists panel_opacity integer default 70;
 alter table public.profiles add column if not exists button_opacity integer default 12;
+alter table public.profiles add column if not exists panel_radius integer default 8;
+alter table public.profiles add column if not exists button_radius integer default 6;
 alter table public.profiles add column if not exists background_style text default 'soft';
 alter table public.profiles add column if not exists button_style text default 'glass';
 alter table public.profiles add column if not exists font_style text default 'clean';
