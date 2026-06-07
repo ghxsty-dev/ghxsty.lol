@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { MAX_PROFILE_LINKS } from "@/lib/limits";
 import { ensureUserProfile } from "@/lib/profile";
 import { deleteR2ObjectByUrl, uploadR2Object } from "@/lib/r2";
 import { createClient } from "@/lib/supabase/server";
@@ -18,6 +19,8 @@ export type DashboardState = {
   error?: string;
   success?: string;
 };
+
+export type LinkState = DashboardState;
 
 async function getOwnedProfile() {
   const supabase = await createClient();
@@ -144,6 +147,7 @@ export async function updateProfileAction(
       music_title: String(formData.get("music_title") ?? "").trim(),
       music_show_volume: getCheckbox(formData, "music_show_volume"),
       music_volume_position: getVolumePosition(formData),
+      discord_show_presence: getCheckbox(formData, "discord_show_presence"),
       theme: String(formData.get("theme") ?? "dark") as ProfileTheme,
       accent_color: getColor(formData, "accent_color", "#ffffff"),
       page_background_color: getColor(
@@ -330,14 +334,39 @@ export async function removeMusicAction(): Promise<void> {
   revalidatePath(`/${profile.username}`);
 }
 
-export async function addLinkAction(formData: FormData) {
+export async function disconnectDiscordAction() {
+  const { supabase, profile } = await getOwnedProfile();
+
+  await supabase
+    .from("profiles")
+    .update({
+      discord_id: null,
+      discord_username: null,
+      discord_global_name: null,
+      discord_avatar_url: null,
+      discord_banner_url: null,
+      discord_accent_color: null,
+      discord_show_presence: true,
+      discord_connected_at: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", profile.id);
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
+}
+
+export async function addLinkAction(
+  _prevState: LinkState,
+  formData: FormData,
+): Promise<LinkState> {
   const { supabase, profile } = await getOwnedProfile();
   const title = String(formData.get("title") ?? "").trim();
   const url = String(formData.get("url") ?? "").trim();
   const icon = String(formData.get("icon") ?? "").trim();
 
   if (!title || !url) {
-    return;
+    return { error: "Başlık ve URL gerekli." };
   }
 
   const { count } = await supabase
@@ -345,7 +374,11 @@ export async function addLinkAction(formData: FormData) {
     .select("*", { count: "exact", head: true })
     .eq("profile_id", profile.id);
 
-  await supabase.from("profile_links").insert({
+  if ((count ?? 0) >= MAX_PROFILE_LINKS) {
+    return { error: `En fazla ${MAX_PROFILE_LINKS} link ekleyebilirsin.` };
+  }
+
+  const { error } = await supabase.from("profile_links").insert({
     profile_id: profile.id,
     title,
     url,
@@ -353,8 +386,13 @@ export async function addLinkAction(formData: FormData) {
     position: count ?? 0,
   });
 
+  if (error) {
+    return { error: "Link eklenemedi." };
+  }
+
   revalidatePath("/dashboard");
   revalidatePath(`/${profile.username}`);
+  return { success: "Link eklendi." };
 }
 
 export async function deleteLinkAction(formData: FormData) {

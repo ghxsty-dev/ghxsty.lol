@@ -55,6 +55,9 @@ CLOUDFLARE_R2_BUCKET=ghxsty-media
 CLOUDFLARE_R2_PUBLIC_URL=https://cdn.ghxsty.lol
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=your-turnstile-site-key
 TURNSTILE_SECRET_KEY=your-turnstile-secret-key
+DISCORD_CLIENT_ID=your-discord-client-id
+DISCORD_CLIENT_SECRET=your-discord-client-secret
+DISCORD_REDIRECT_URI=http://localhost:3000/api/discord/callback
 ```
 
 ## Supabase
@@ -87,6 +90,20 @@ Kayıt formu Cloudflare Turnstile ile korunabilir.
 
 `TURNSTILE_SECRET_KEY` tanımlıysa kayıt formunda gelen Turnstile token sunucuda doğrulanır.
 
+## Discord
+
+Dashboard içinden Discord hesabı bağlanabilir.
+
+1. Discord Developer Portal içinde application oluştur.
+2. OAuth2 redirect URL olarak local ve production callback adreslerini ekle:
+   - `http://localhost:3000/api/discord/callback`
+   - `https://ghxsty.lol/api/discord/callback`
+3. `.env.local` içine `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` ve `DISCORD_REDIRECT_URI` ekle.
+4. Production için Vercel Environment Variables alanına aynı değerleri gir.
+5. Supabase SQL Editor içinde `supabase/discord-integration.sql` dosyasını çalıştır.
+
+Canlı Discord etkinliği için public profilde Lanyard API kullanılır. Lanyard veri dönmezse yalnızca bağlı Discord profil bilgisi gösterilir.
+
 ## Vercel
 
 1. Repo’yu Vercel’e bağla.
@@ -101,6 +118,9 @@ Kayıt formu Cloudflare Turnstile ile korunabilir.
    - `CLOUDFLARE_R2_PUBLIC_URL`
    - `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
    - `TURNSTILE_SECRET_KEY`
+   - `DISCORD_CLIENT_ID`
+   - `DISCORD_CLIENT_SECRET`
+   - `DISCORD_REDIRECT_URI`
 3. Supabase Auth > URL Configuration içinde Site URL ve Redirect URLs değerlerine production domainini ekle.
 4. Deploy et.
 

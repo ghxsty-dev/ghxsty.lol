@@ -14,6 +14,14 @@ export type Profile = {
   bio: string | null;
   avatar_url: string | null;
   banner_url: string | null;
+  discord_id: string | null;
+  discord_username: string | null;
+  discord_global_name: string | null;
+  discord_avatar_url: string | null;
+  discord_banner_url: string | null;
+  discord_accent_color: number | null;
+  discord_show_presence: boolean | null;
+  discord_connected_at: string | null;
   music_url: string | null;
   music_title: string | null;
   music_show_volume: boolean | null;

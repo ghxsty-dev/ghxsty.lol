@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { THEMES } from "@/lib/themes";
+import { DiscordCard } from "@/components/profile/discord-card";
 import { getLinkIcon } from "@/lib/link-icons";
 import { ProfileAudio } from "@/components/profile/profile-audio";
 import { ProfileShare } from "@/components/profile/profile-share";
@@ -188,6 +189,8 @@ export function ProfileView({
             initialDownvotes={voteScore?.downvotes ?? 0}
             initialVote={currentVote ?? null}
           />
+
+          <DiscordCard profile={profile} />
 
           {profile.music_url ? (
             <div className="relative mt-6">

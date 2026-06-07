@@ -1,4 +1,12 @@
 alter table public.profiles add column if not exists music_url text;
+alter table public.profiles add column if not exists discord_id text;
+alter table public.profiles add column if not exists discord_username text;
+alter table public.profiles add column if not exists discord_global_name text;
+alter table public.profiles add column if not exists discord_avatar_url text;
+alter table public.profiles add column if not exists discord_banner_url text;
+alter table public.profiles add column if not exists discord_accent_color integer;
+alter table public.profiles add column if not exists discord_show_presence boolean default true;
+alter table public.profiles add column if not exists discord_connected_at timestamptz;
 alter table public.profiles add column if not exists music_title text;
 alter table public.profiles add column if not exists music_show_volume boolean default true;
 alter table public.profiles add column if not exists music_volume_position text default 'top-right';
@@ -22,10 +30,15 @@ alter table public.profiles add column if not exists background_style text defau
 alter table public.profiles add column if not exists button_style text default 'glass';
 alter table public.profiles add column if not exists font_style text default 'clean';
 
+create unique index if not exists profiles_discord_id_unique
+  on public.profiles(discord_id)
+  where discord_id is not null;
+
 update public.profiles
 set
   music_show_volume = coalesce(music_show_volume, true),
   music_volume_position = coalesce(music_volume_position, 'top-right'),
+  discord_show_presence = coalesce(discord_show_presence, true),
   accent_color = coalesce(accent_color, '#ffffff'),
   page_background_color = coalesce(page_background_color, '#050507'),
   panel_background_color = coalesce(panel_background_color, '#111113'),

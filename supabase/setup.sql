@@ -23,6 +23,14 @@ create table if not exists public.profiles (
   bio text,
   avatar_url text,
   banner_url text,
+  discord_id text,
+  discord_username text,
+  discord_global_name text,
+  discord_avatar_url text,
+  discord_banner_url text,
+  discord_accent_color integer,
+  discord_show_presence boolean default true,
+  discord_connected_at timestamptz,
   music_url text,
   music_title text,
   music_show_volume boolean default true,
@@ -79,6 +87,10 @@ create table if not exists public.profile_links (
 create index if not exists profile_links_profile_position_idx
   on public.profile_links(profile_id, position);
 
+create unique index if not exists profiles_discord_id_unique
+  on public.profiles(discord_id)
+  where discord_id is not null;
+
 create table if not exists public.profile_votes (
   id uuid primary key default gen_random_uuid(),
   profile_id uuid not null references public.profiles(id) on delete cascade,
@@ -105,11 +117,34 @@ begin
 end;
 $$;
 
+create or replace function public.enforce_profile_link_limit()
+returns trigger
+language plpgsql
+as $$
+begin
+  if (
+    select count(*)
+    from public.profile_links
+    where profile_id = new.profile_id
+  ) >= 12 then
+    raise exception 'En fazla 12 link eklenebilir.';
+  end if;
+
+  return new;
+end;
+$$;
+
 drop trigger if exists profiles_set_updated_at on public.profiles;
 
 create trigger profiles_set_updated_at
 before update on public.profiles
 for each row execute function public.set_updated_at();
+
+drop trigger if exists profile_links_limit_before_insert on public.profile_links;
+
+create trigger profile_links_limit_before_insert
+before insert on public.profile_links
+for each row execute function public.enforce_profile_link_limit();
 
 drop trigger if exists profile_votes_set_updated_at on public.profile_votes;
 
@@ -285,6 +320,14 @@ group by profiles.id;
 grant select on public.profile_vote_scores to anon, authenticated;
 
 alter table public.profiles add column if not exists music_url text;
+alter table public.profiles add column if not exists discord_id text;
+alter table public.profiles add column if not exists discord_username text;
+alter table public.profiles add column if not exists discord_global_name text;
+alter table public.profiles add column if not exists discord_avatar_url text;
+alter table public.profiles add column if not exists discord_banner_url text;
+alter table public.profiles add column if not exists discord_accent_color integer;
+alter table public.profiles add column if not exists discord_show_presence boolean default true;
+alter table public.profiles add column if not exists discord_connected_at timestamptz;
 alter table public.profiles add column if not exists music_title text;
 alter table public.profiles add column if not exists music_show_volume boolean default true;
 alter table public.profiles add column if not exists music_volume_position text default 'top-right';

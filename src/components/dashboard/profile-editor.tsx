@@ -2,10 +2,12 @@
 
 import { useEffect } from "react";
 import { useActionState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
-import { Music, Save, Trash2, Upload } from "lucide-react";
+import { Gamepad2, Music, Save, Trash2, Upload } from "lucide-react";
 import {
+  disconnectDiscordAction,
   removeMusicAction,
   updateProfileAction,
   uploadImageAction,
@@ -227,6 +229,17 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
               <option value="bottom-left">Sol alt</option>
             </Select>
           </div>
+          <div className="flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.05] px-3 py-3 sm:col-span-2">
+            <input
+              id="discord_show_presence"
+              name="discord_show_presence"
+              type="checkbox"
+              defaultChecked={profile.discord_show_presence ?? true}
+              disabled={!profile.discord_id}
+              className="h-4 w-4 accent-white disabled:opacity-40"
+            />
+            <Label htmlFor="discord_show_presence">Discord etkinliğini public profilde göster</Label>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="background_blur">Arka plan blur</Label>
             <Input
@@ -299,6 +312,42 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
 
       <div className="space-y-4 rounded-lg border border-white/10 bg-white/[0.04] p-4">
         <h3 className="text-sm font-semibold text-white">Medya</h3>
+        <div className="space-y-3 rounded-md border border-white/10 bg-white/[0.04] p-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#5865f2] text-white">
+              <Gamepad2 className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-white">Discord</p>
+              <p className="truncate text-xs text-zinc-400">
+                {profile.discord_id
+                  ? `${profile.discord_global_name ?? profile.discord_username} bağlı`
+                  : "Discord profilini ve etkinliğini bağla"}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {profile.discord_id ? (
+              <form action={disconnectDiscordAction}>
+                <Button type="submit" variant="ghost">
+                  Bağlantıyı kaldır
+                </Button>
+              </form>
+            ) : (
+              <Link
+                href="/api/discord/connect"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
+              >
+                Discord bağla
+              </Link>
+            )}
+          </div>
+          {profile.discord_id ? (
+            <p className="text-xs leading-5 text-zinc-500">
+              Canlı etkinlik için Discord hesabının Lanyard tarafından görülebilir olması gerekir.
+            </p>
+          ) : null}
+        </div>
         {(["avatar_url", "banner_url"] as const).map((field) => (
           <form key={field} action={uploadAction} className="space-y-3">
             <input type="hidden" name="field" value={field} />
@@ -359,6 +408,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             {(profile.panel_visible ?? true) ? <input type="hidden" name="panel_visible" value="on" /> : null}
             {(profile.links_icon_only ?? false) ? <input type="hidden" name="links_icon_only" value="on" /> : null}
             {(profile.music_show_volume ?? true) ? <input type="hidden" name="music_show_volume" value="on" /> : null}
+            {(profile.discord_show_presence ?? true) ? <input type="hidden" name="discord_show_presence" value="on" /> : null}
             <input type="hidden" name="music_volume_position" value={profile.music_volume_position ?? "top-right"} />
             <input type="hidden" name="background_blur" value={profile.background_blur ?? 10} />
             <input type="hidden" name="panel_opacity" value={profile.panel_opacity ?? 70} />

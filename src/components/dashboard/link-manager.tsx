@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useActionState } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -26,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { MAX_PROFILE_LINKS } from "@/lib/limits";
 import {
   LINK_ICON_OPTIONS,
   getLinkIcon,
@@ -85,9 +87,15 @@ function SortableLink({ link }: { link: ProfileLink }) {
 export function LinkManager({ links }: { links: ProfileLink[] }) {
   const [items, setItems] = useState(links);
   const [selectedIcon, setSelectedIcon] = useState("github");
+  const [addState, addAction] = useActionState(addLinkAction, {});
   const [isPending, startTransition] = useTransition();
   const sensors = useSensors(useSensor(PointerSensor));
   const ids = useMemo(() => items.map((item) => item.id), [items]);
+  const limitReached = items.length >= MAX_PROFILE_LINKS;
+
+  useEffect(() => {
+    setItems(links);
+  }, [links]);
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -106,6 +114,14 @@ export function LinkManager({ links }: { links: ProfileLink[] }) {
 
   return (
     <div className="space-y-5">
+      <div className="flex flex-col gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 py-3 text-sm text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
+        <span>
+          {items.length}/{MAX_PROFILE_LINKS} link kullanılıyor.
+        </span>
+        <span className="text-xs text-zinc-500">
+          Limit, profilin okunabilir kalması için uygulanır.
+        </span>
+      </div>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {LINK_ICON_OPTIONS.slice(0, 8).map((option) => {
           const Icon = getLinkIcon(option.key);
@@ -123,13 +139,25 @@ export function LinkManager({ links }: { links: ProfileLink[] }) {
         })}
       </div>
 
-      <form action={addLinkAction} className="grid gap-3 md:grid-cols-[1fr_1fr_0.8fr_auto]">
+      {addState.error ? (
+        <p className="rounded-md border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm text-red-100">
+          {addState.error}
+        </p>
+      ) : null}
+      {addState.success ? (
+        <p className="rounded-md border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">
+          {addState.success}
+        </p>
+      ) : null}
+
+      <form action={addAction} className="grid gap-3 md:grid-cols-[1fr_1fr_0.8fr_auto]">
         <div className="space-y-2">
           <Label htmlFor="title">Başlık</Label>
           <Input
             id="title"
             name="title"
             placeholder={getLinkIconLabel(selectedIcon)}
+            disabled={limitReached}
             required
           />
         </div>
@@ -143,6 +171,7 @@ export function LinkManager({ links }: { links: ProfileLink[] }) {
               LINK_ICON_OPTIONS.find((option) => option.key === selectedIcon)
                 ?.placeholder ?? "https://example.com"
             }
+            disabled={limitReached}
             required
           />
         </div>
@@ -153,6 +182,7 @@ export function LinkManager({ links }: { links: ProfileLink[] }) {
             name="icon"
             value={selectedIcon}
             onChange={(event) => setSelectedIcon(event.target.value)}
+            disabled={limitReached}
           >
             {LINK_ICON_OPTIONS.map((option) => (
               <option key={option.key} value={option.key}>
@@ -162,9 +192,9 @@ export function LinkManager({ links }: { links: ProfileLink[] }) {
           </Select>
         </div>
         <div className="flex items-end">
-          <Button type="submit" className="w-full md:w-auto">
+          <Button type="submit" className="w-full md:w-auto" disabled={limitReached}>
             <Plus className="h-4 w-4" />
-            Ekle
+            {limitReached ? "Limit dolu" : "Ekle"}
           </Button>
         </div>
       </form>
