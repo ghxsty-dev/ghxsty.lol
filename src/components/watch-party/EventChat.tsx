@@ -15,7 +15,7 @@ type ChatFeedItem =
   | { type: "message"; message: EventMessage }
   | { type: "system"; id: string; text: string; createdAt: number };
 
-type TenorGif = {
+type GifResult = {
   id: string;
   title: string;
   url: string;
@@ -43,7 +43,7 @@ export function EventChat({
   const [text, setText] = useState("");
   const [gifPanelOpen, setGifPanelOpen] = useState(false);
   const [gifQuery, setGifQuery] = useState("");
-  const [gifs, setGifs] = useState<TenorGif[]>([]);
+  const [gifs, setGifs] = useState<GifResult[]>([]);
   const [gifLoading, setGifLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -133,9 +133,9 @@ export function EventChat({
     setError(null);
     setGifLoading(true);
     try {
-      const response = await fetch(`/api/tenor/search?q=${encodeURIComponent(query || "anime")}`);
+      const response = await fetch(`/api/giphy/search?q=${encodeURIComponent(query || "anime")}`);
       const payload = (await response.json().catch(() => ({}))) as {
-        results?: TenorGif[];
+        results?: GifResult[];
         error?: string;
       };
 
@@ -166,14 +166,14 @@ export function EventChat({
     setText("");
   }
 
-  async function sendGif(gif: TenorGif) {
+  async function sendGif(gif: GifResult) {
     if (!currentUserId) {
       setError("GIF göndermek için giriş yapmalısın.");
       return;
     }
 
     await insertMessage({
-      message: gif.title || "Tenor GIF",
+      message: gif.title || "GIPHY GIF",
       messageType: "gif",
       gifUrl: gif.url,
     });
@@ -266,7 +266,7 @@ export function EventChat({
                     void searchGifs();
                   }
                 }}
-                placeholder="Tenor GIF ara..."
+                placeholder="GIF ara..."
                 className="min-w-0 flex-1 rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none"
               />
               <Button type="button" variant="secondary" onClick={() => void searchGifs()}>

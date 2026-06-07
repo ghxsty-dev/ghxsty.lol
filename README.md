@@ -55,7 +55,7 @@ CLOUDFLARE_R2_SECRET_ACCESS_KEY=your-secret-access-key
 CLOUDFLARE_R2_BUCKET=ghxsty-media
 CLOUDFLARE_R2_PUBLIC_URL=https://cdn.ghxsty.lol
 CRON_SECRET=change-this-long-random-secret
-TENOR_API_KEY=your-tenor-api-key
+GIPHY_API_KEY=your-giphy-api-key
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=your-turnstile-site-key
 TURNSTILE_SECRET_KEY=your-turnstile-secret-key
 DISCORD_CLIENT_ID=your-discord-client-id
@@ -112,7 +112,7 @@ Watch Party için Supabase SQL Editor içinde `supabase/migrations/watch_party_s
 - Public liste: `/events`
 - Public etkinlik sayfası: `/events/[eventId]`
 - Video upload R2 presigned URL ile yapılır; R2 secret client tarafına çıkmaz.
-- Chat içindeki Tenor GIF araması için `TENOR_API_KEY` gerekir.
+- Chat içindeki GIF araması GIPHY API ile yapılır. Bunun için `GIPHY_API_KEY` gerekir.
 - Temizlik endpoint’i: `/api/events/cleanup`
 
 Vercel Cron kullanacaksan `/api/events/cleanup` endpoint’ine `Authorization: Bearer CRON_SECRET` header’ı gönderilecek şekilde ayarla. Bu endpoint süresi geçmiş ended event videolarını R2’den siler ve event’i `deleted` durumuna alır.
@@ -156,7 +156,7 @@ Canlı Discord etkinliği için public profilde Lanyard API kullanılır. Lanyar
    - `CLOUDFLARE_R2_BUCKET`
    - `CLOUDFLARE_R2_PUBLIC_URL`
    - `CRON_SECRET`
-   - `TENOR_API_KEY`
+   - `GIPHY_API_KEY`
    - `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
    - `TURNSTILE_SECRET_KEY`
    - `DISCORD_CLIENT_ID`
