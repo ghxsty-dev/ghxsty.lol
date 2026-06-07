@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { ExternalLink, LogOut } from "lucide-react";
+import { ExternalLink, LogOut, ShieldCheck } from "lucide-react";
 import { redirect } from "next/navigation";
 import { signOutAction } from "@/app/(auth)/actions";
+import { CommunityThemesPanel } from "@/components/dashboard/community-themes-panel";
 import { LinkManager } from "@/components/dashboard/link-manager";
 import { ProfileEditor } from "@/components/dashboard/profile-editor";
 import { UsernameSetup } from "@/components/dashboard/username-setup";
@@ -18,7 +19,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { ensureUserProfile, hasTemporaryUsername } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
-import type { Profile, ProfileLink } from "@/types/database";
+import type {
+  CommunityThemeWithAuthor,
+  Profile,
+  ProfileLink,
+} from "@/types/database";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -54,6 +59,13 @@ export default async function DashboardPage() {
     .eq("profile_id", typedProfile.id)
     .order("position", { ascending: true });
   const links = (rawLinks ?? []) as ProfileLink[];
+  const { data: rawCommunityThemes } = await supabase
+    .from("community_themes")
+    .select("*, author:profiles!community_themes_author_profile_id_fkey(username, display_name, avatar_url)")
+    .eq("status", "approved")
+    .order("approved_at", { ascending: false });
+  const communityThemes = (rawCommunityThemes ?? []) as CommunityThemeWithAuthor[];
+  const isAdmin = Boolean(typedProfile.is_admin) || typedProfile.username === "ghxsty";
 
   return (
     <main className="min-h-screen bg-[#050507] p-3 text-white sm:p-4">
@@ -69,6 +81,15 @@ export default async function DashboardPage() {
             </h1>
           </div>
           <div className="flex flex-wrap gap-2">
+            {isAdmin ? (
+              <Link
+                href="/admin"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Admin
+              </Link>
+            ) : null}
             <Link
               href={`/${typedProfile.username}`}
               className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
@@ -95,11 +116,23 @@ export default async function DashboardPage() {
               <CardHeader>
                 <CardTitle>Profil</CardTitle>
                 <CardDescription>
-                  Görünen isim, kullanıcı adı, bio, tema ve görseller.
+                  Görünen isim, kullanıcı adı, bio, görünüm ve görseller.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ProfileEditor key={typedProfile.updated_at} profile={typedProfile} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Topluluk Temaları</CardTitle>
+                <CardDescription>
+                  Onaylanan temaları kullan veya kendi görünümünü gönder.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CommunityThemesPanel themes={communityThemes} />
               </CardContent>
             </Card>
 

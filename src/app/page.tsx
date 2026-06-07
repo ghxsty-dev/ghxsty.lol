@@ -61,6 +61,12 @@ export default async function Home() {
           >
             Keşfet
           </Link>
+          <Link
+            href="/themes"
+            className="hidden h-10 items-center justify-center rounded-md px-4 text-sm font-medium text-zinc-200 transition hover:bg-white/10 hover:text-white sm:inline-flex"
+          >
+            Temalar
+          </Link>
           {user ? (
             <>
               {profile?.username ? (

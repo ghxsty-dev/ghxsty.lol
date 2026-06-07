@@ -14,7 +14,6 @@ import {
   uploadMusicAction,
   type DashboardState,
 } from "@/app/dashboard/actions";
-import { THEMES } from "@/lib/themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -93,6 +92,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
       <form action={profileAction} className="space-y-5">
         <input type="hidden" name="music_title" value={profile.music_title ?? ""} />
+        <input type="hidden" name="theme" value={profile.theme} />
         <div className="space-y-4 rounded-lg border border-white/10 bg-white/[0.04] p-4">
           <h3 className="text-sm font-semibold text-white">Kimlik</h3>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -130,16 +130,6 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
 
         <div className="space-y-4 rounded-lg border border-white/10 bg-white/[0.04] p-4">
           <h3 className="text-sm font-semibold text-white">Görünüm</h3>
-          <div className="space-y-2">
-            <Label htmlFor="theme">Tema</Label>
-            <Select id="theme" name="theme" defaultValue={profile.theme}>
-              {Object.entries(THEMES).map(([value, theme]) => (
-                <option key={value} value={value}>
-                  {theme.label}
-                </option>
-              ))}
-            </Select>
-          </div>
           <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid grid-cols-2 gap-3 sm:col-span-2 md:grid-cols-4">
             <ColorField id="accent_color" label="Vurgu" defaultValue={profile.accent_color ?? "#ffffff"} />

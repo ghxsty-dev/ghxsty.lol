@@ -9,6 +9,7 @@ export type ProfileTheme =
 export type Profile = {
   id: string;
   user_id: string;
+  is_admin: boolean | null;
   username: string;
   display_name: string | null;
   bio: string | null;
@@ -50,6 +51,51 @@ export type Profile = {
   theme: ProfileTheme;
   created_at: string;
   updated_at: string;
+};
+
+export type CommunityThemeStatus = "pending" | "approved" | "rejected";
+
+export type CommunityTheme = {
+  id: string;
+  author_profile_id: string;
+  name: string;
+  description: string | null;
+  status: CommunityThemeStatus;
+  banner_url: string | null;
+  music_url: string | null;
+  music_title: string | null;
+  music_show_volume: boolean | null;
+  music_volume_position: string | null;
+  theme: ProfileTheme;
+  accent_color: string | null;
+  page_background_color: string | null;
+  panel_background_color: string | null;
+  text_color: string | null;
+  muted_text_color: string | null;
+  button_background_color: string | null;
+  button_text_color: string | null;
+  header_enabled: boolean | null;
+  header_background_style: string | null;
+  header_color: string | null;
+  header_color_to: string | null;
+  panel_visible: boolean | null;
+  links_icon_only: boolean | null;
+  background_blur: number | null;
+  panel_opacity: number | null;
+  button_opacity: number | null;
+  panel_radius: number | null;
+  button_radius: number | null;
+  background_style: string | null;
+  button_style: string | null;
+  font_style: string | null;
+  approved_by_profile_id: string | null;
+  approved_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CommunityThemeWithAuthor = CommunityTheme & {
+  author?: Pick<Profile, "username" | "display_name" | "avatar_url"> | null;
 };
 
 export type ProfileLink = {
@@ -105,6 +151,15 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<ProfileVote, "id" | "profile_id" | "user_id" | "created_at">>;
+      };
+      community_themes: {
+        Row: CommunityTheme;
+        Insert: Omit<CommunityTheme, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<CommunityTheme, "id" | "created_at">>;
       };
     };
     Views: {

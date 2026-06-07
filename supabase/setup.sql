@@ -18,6 +18,7 @@ $$;
 create table if not exists public.profiles (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null unique references auth.users(id) on delete cascade,
+  is_admin boolean default false,
   username text not null unique,
   display_name text,
   bio text,
@@ -84,6 +85,48 @@ create table if not exists public.profile_links (
   position integer not null default 0,
   constraint profile_links_title_length check (char_length(title) between 1 and 60),
   constraint profile_links_url_format check (url ~ '^https?://')
+);
+
+create table if not exists public.community_themes (
+  id uuid primary key default gen_random_uuid(),
+  author_profile_id uuid not null references public.profiles(id) on delete cascade,
+  name text not null,
+  description text,
+  status text not null default 'pending',
+  banner_url text,
+  music_url text,
+  music_title text,
+  music_show_volume boolean default true,
+  music_volume_position text default 'top-right',
+  theme public.profile_theme not null default 'dark',
+  accent_color text default '#ffffff',
+  page_background_color text default '#050507',
+  panel_background_color text default '#111113',
+  text_color text default '#ffffff',
+  muted_text_color text default '#d4d4d8',
+  button_background_color text default '#ffffff',
+  button_text_color text default '#ffffff',
+  header_enabled boolean default true,
+  header_background_style text default 'gradient',
+  header_color text default '#74d9bf',
+  header_color_to text default '#2f9d8f',
+  panel_visible boolean default true,
+  links_icon_only boolean default false,
+  background_blur integer default 10,
+  panel_opacity integer default 70,
+  button_opacity integer default 12,
+  panel_radius integer default 8,
+  button_radius integer default 6,
+  background_style text default 'soft',
+  button_style text default 'glass',
+  font_style text default 'clean',
+  approved_by_profile_id uuid references public.profiles(id) on delete set null,
+  approved_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint community_themes_name_length check (char_length(name) between 3 and 40),
+  constraint community_themes_description_length check (description is null or char_length(description) <= 160),
+  constraint community_themes_status_check check (status in ('pending', 'approved', 'rejected'))
 );
 
 create index if not exists profile_links_profile_position_idx
@@ -202,6 +245,7 @@ for each row execute function public.handle_new_user();
 alter table public.profiles enable row level security;
 alter table public.profile_links enable row level security;
 alter table public.profile_votes enable row level security;
+alter table public.community_themes enable row level security;
 
 drop policy if exists "Profiles are public" on public.profiles;
 drop policy if exists "Users insert their own profile" on public.profiles;
@@ -322,6 +366,7 @@ group by profiles.id;
 grant select on public.profile_vote_scores to anon, authenticated;
 
 alter table public.profiles add column if not exists music_url text;
+alter table public.profiles add column if not exists is_admin boolean default false;
 alter table public.profiles add column if not exists discord_id text;
 alter table public.profiles add column if not exists discord_username text;
 alter table public.profiles add column if not exists discord_global_name text;

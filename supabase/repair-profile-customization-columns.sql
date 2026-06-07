@@ -1,4 +1,5 @@
 alter table public.profiles add column if not exists music_url text;
+alter table public.profiles add column if not exists is_admin boolean default false;
 alter table public.profiles add column if not exists discord_id text;
 alter table public.profiles add column if not exists discord_username text;
 alter table public.profiles add column if not exists discord_global_name text;
@@ -35,6 +36,10 @@ alter table public.profiles add column if not exists font_style text default 'cl
 create unique index if not exists profiles_discord_id_unique
   on public.profiles(discord_id)
   where discord_id is not null;
+
+update public.profiles
+set is_admin = true
+where username = 'ghxsty';
 
 update public.profiles
 set

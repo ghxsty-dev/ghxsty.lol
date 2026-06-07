@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { MAX_PROFILE_LINKS } from "@/lib/limits";
+import {
+  createCommunityThemeSnapshot,
+  getCommunityThemeUpdate,
+} from "@/lib/community-theme";
 import { ensureUserProfile } from "@/lib/profile";
 import { deleteR2ObjectByUrl, uploadR2Object } from "@/lib/r2";
 import { createClient } from "@/lib/supabase/server";
@@ -21,6 +25,8 @@ export type DashboardState = {
 };
 
 export type LinkState = DashboardState;
+
+export type ThemeState = DashboardState;
 
 export async function completeUsernameSetupAction(
   _prevState: DashboardState,
@@ -238,6 +244,62 @@ export async function updateProfileAction(
   revalidatePath(`/${profile.username}`);
   revalidatePath(`/${username}`);
   return { success: "Profil güncellendi." };
+}
+
+export async function submitCommunityThemeAction(
+  _prevState: ThemeState,
+  formData: FormData,
+): Promise<ThemeState> {
+  const { supabase, profile } = await getOwnedProfile();
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+
+  if (name.length < 3 || name.length > 40) {
+    return { error: "Tema adı 3-40 karakter olmalı." };
+  }
+
+  const { error } = await supabase.from("community_themes").insert({
+    author_profile_id: profile.id,
+    name,
+    description: description || null,
+    status: "pending",
+    approved_by_profile_id: null,
+    approved_at: null,
+    ...createCommunityThemeSnapshot(profile),
+  });
+
+  if (error) {
+    return { error: `Tema gönderilemedi: ${error.message}` };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/admin");
+  return { success: "Tema gönderildi. Admin onayından sonra yayınlanacak." };
+}
+
+export async function applyCommunityThemeAction(formData: FormData) {
+  const { supabase, profile } = await getOwnedProfile();
+  const themeId = String(formData.get("theme_id") ?? "");
+
+  const { data: theme, error } = await supabase
+    .from("community_themes")
+    .select("*")
+    .eq("id", themeId)
+    .eq("status", "approved")
+    .maybeSingle();
+
+  if (error || !theme) {
+    revalidatePath("/dashboard");
+    return;
+  }
+
+  await supabase
+    .from("profiles")
+    .update(getCommunityThemeUpdate(theme))
+    .eq("id", profile.id);
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
 }
 
 export async function uploadImageAction(
