@@ -5,6 +5,7 @@ import {
   FaGlobe,
   FaInstagram,
   FaLink,
+  FaRedditAlien,
   FaSpotify,
   FaTiktok,
   FaTwitch,
@@ -20,6 +21,7 @@ export type LinkIconKey =
   | "tiktok"
   | "instagram"
   | "guns"
+  | "reddit"
   | "spotify"
   | "x"
   | "twitch"
@@ -39,6 +41,7 @@ export const LINK_ICON_OPTIONS: Array<{
   { key: "discord", label: "Discord", placeholder: "https://discord.gg/example" },
   { key: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/@ghxsty" },
   { key: "instagram", label: "Instagram", placeholder: "https://instagram.com/ghxsty" },
+  { key: "reddit", label: "Reddit", placeholder: "https://reddit.com/u/ghxsty" },
   { key: "guns", label: "Guns.lol", placeholder: "https://guns.lol/ghxsty" },
   { key: "spotify", label: "Spotify", placeholder: "https://open.spotify.com/user/..." },
   { key: "x", label: "X", placeholder: "https://x.com/ghxsty" },
@@ -84,6 +87,7 @@ export const LINK_ICONS: Record<LinkIconKey, IconType> = {
   discord: FaDiscord,
   tiktok: FaTiktok,
   instagram: FaInstagram,
+  reddit: FaRedditAlien,
   guns: GunsIcon,
   spotify: FaSpotify,
   x: FaXTwitter,

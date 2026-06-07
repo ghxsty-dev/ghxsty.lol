@@ -1,21 +1,26 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pause, Play, Volume2 } from "lucide-react";
+import { Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function ProfileAudio({
   src,
+  title = "Profil şarkısı",
+  showVolume = true,
   className,
   overlay = false,
 }: {
   src: string;
+  title?: string;
+  showVolume?: boolean;
   className?: string;
   overlay?: boolean;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [volume, setVolume] = useState(55);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -72,6 +77,13 @@ export function ProfileAudio({
     };
   }, [isBlocked, toggleAudio]);
 
+  function handleVolume(value: number) {
+    setVolume(value);
+    if (audioRef.current) {
+      audioRef.current.volume = value / 100;
+    }
+  }
+
   return (
     <>
       {overlay && isBlocked ? (
@@ -86,21 +98,39 @@ export function ProfileAudio({
       ) : null}
       <div
         className={cn(
-          "flex items-center justify-between gap-3 rounded-md border border-white/10 bg-black/25 px-3 py-2 text-xs backdrop-blur-xl",
+          "relative rounded-md border border-white/10 bg-black/25 px-4 py-4 text-xs backdrop-blur-xl",
           className,
         )}
       >
         <audio ref={audioRef} src={src} autoPlay loop preload="auto" />
-        <span className="flex min-w-0 items-center gap-2 text-zinc-200">
-          <Volume2 className="h-4 w-4 shrink-0" />
-          <span className="truncate">
-            {isBlocked ? "Tarayıcı çalmayı engelledi" : "Profil şarkısı"}
+        {showVolume ? (
+          <div className="absolute right-3 top-3 flex items-center gap-2 text-zinc-200">
+            {volume === 0 ? (
+              <VolumeX className="h-4 w-4" />
+            ) : (
+              <Volume2 className="h-4 w-4" />
+            )}
+            <input
+              aria-label="Ses düzeyi"
+              type="range"
+              min="0"
+              max="100"
+              value={volume}
+              onChange={(event) => handleVolume(Number(event.target.value))}
+              className="h-1 w-20 accent-white"
+            />
+          </div>
+        ) : null}
+        <div className="mx-auto max-w-[70%] text-center">
+          <p className="truncate text-sm font-semibold text-white">{title}</p>
+          <span className="mt-1 block truncate text-zinc-400">
+            {isBlocked ? "Başlatmak için tıkla" : isPlaying ? "Çalıyor" : "Duraklatıldı"}
           </span>
-        </span>
+        </div>
         <button
           type="button"
           onClick={toggleAudio}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white text-zinc-950 transition hover:bg-zinc-200"
+          className="mx-auto mt-3 flex h-9 w-9 items-center justify-center rounded-md bg-white text-zinc-950 transition hover:bg-zinc-200"
           aria-label={isPlaying ? "Şarkıyı durdur" : "Şarkıyı çal"}
         >
           {isPlaying ? (

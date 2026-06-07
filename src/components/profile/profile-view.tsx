@@ -166,7 +166,12 @@ export function ProfileView({ profile }: { profile: PublicProfile }) {
 
           {profile.music_url ? (
             <div className="relative mt-6">
-              <ProfileAudio src={profile.music_url} overlay />
+              <ProfileAudio
+                src={profile.music_url}
+                title={profile.music_title ?? "Profil şarkısı"}
+                showVolume={profile.music_show_volume ?? true}
+                overlay
+              />
             </div>
           ) : null}
 

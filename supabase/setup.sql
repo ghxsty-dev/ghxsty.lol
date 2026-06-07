@@ -24,6 +24,8 @@ create table if not exists public.profiles (
   avatar_url text,
   banner_url text,
   music_url text,
+  music_title text,
+  music_show_volume boolean default true,
   accent_color text default '#ffffff',
   page_background_color text default '#050507',
   panel_background_color text default '#111113',
@@ -250,6 +252,8 @@ set
   allowed_mime_types = excluded.allowed_mime_types;
 
 alter table public.profiles add column if not exists music_url text;
+alter table public.profiles add column if not exists music_title text;
+alter table public.profiles add column if not exists music_show_volume boolean default true;
 alter table public.profiles add column if not exists accent_color text default '#ffffff';
 alter table public.profiles add column if not exists page_background_color text default '#050507';
 alter table public.profiles add column if not exists panel_background_color text default '#111113';

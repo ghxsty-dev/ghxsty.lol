@@ -15,6 +15,8 @@ export type Profile = {
   avatar_url: string | null;
   banner_url: string | null;
   music_url: string | null;
+  music_title: string | null;
+  music_show_volume: boolean | null;
   accent_color: string | null;
   page_background_color: string | null;
   panel_background_color: string | null;

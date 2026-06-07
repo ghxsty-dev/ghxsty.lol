@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { ExternalLink, LogOut } from "lucide-react";
 import { redirect } from "next/navigation";
 import { signOutAction } from "@/app/(auth)/actions";
@@ -54,12 +55,13 @@ export default async function DashboardPage() {
   const links = (rawLinks ?? []) as ProfileLink[];
 
   return (
-    <main className="min-h-screen bg-[#050507] px-4 py-6 text-white">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <main className="min-h-screen bg-[#050507] p-3 text-white sm:p-4">
+      <div className="flex w-full flex-col gap-4">
+        <header className="flex flex-col gap-4 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <Link href="/" className="text-sm text-zinc-400 hover:text-white">
-              LinkForge
+            <Link href="/" className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white">
+              <Image src="/glitch-logo.png" alt="ghxsty.lol" width={22} height={22} className="rounded" />
+              ghxsty.lol
             </Link>
             <h1 className="mt-2 text-3xl font-bold tracking-normal">
               Dashboard
@@ -82,7 +84,7 @@ export default async function DashboardPage() {
           </div>
         </header>
 
-        <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-6">
             <Card>
               <CardHeader>

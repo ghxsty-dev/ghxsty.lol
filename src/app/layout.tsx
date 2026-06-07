@@ -15,10 +15,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
-    default: "LinkForge",
-    template: "%s | LinkForge",
+    default: "ghxsty.lol",
+    template: "%s | ghxsty.lol",
   },
-  description: "Modern, temalı ve sosyal link odaklı profil platformu.",
+  description: "ghxsty.lol ile modern, temalı ve sosyal link odaklı profil sayfaları oluştur.",
+  icons: {
+    icon: "/glitch-logo.png",
+    apple: "/glitch-logo.png",
+  },
 };
 
 export default function RootLayout({

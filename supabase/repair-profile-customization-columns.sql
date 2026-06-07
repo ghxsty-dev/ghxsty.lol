@@ -1,4 +1,6 @@
 alter table public.profiles add column if not exists music_url text;
+alter table public.profiles add column if not exists music_title text;
+alter table public.profiles add column if not exists music_show_volume boolean default true;
 alter table public.profiles add column if not exists accent_color text default '#ffffff';
 alter table public.profiles add column if not exists page_background_color text default '#050507';
 alter table public.profiles add column if not exists panel_background_color text default '#111113';
@@ -21,6 +23,7 @@ alter table public.profiles add column if not exists font_style text default 'cl
 
 update public.profiles
 set
+  music_show_volume = coalesce(music_show_volume, true),
   accent_color = coalesce(accent_color, '#ffffff'),
   page_background_color = coalesce(page_background_color, '#050507'),
   panel_background_color = coalesce(panel_background_color, '#111113'),

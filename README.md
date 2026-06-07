@@ -1,4 +1,4 @@
-# LinkForge
+# ghxsty.lol
 
 Guns.lol, Carrd ve Linktree benzeri modern public profil platformu.
 

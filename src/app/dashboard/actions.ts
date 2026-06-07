@@ -123,6 +123,8 @@ export async function updateProfileAction(
       username,
       display_name: String(formData.get("display_name") ?? "").trim(),
       bio: String(formData.get("bio") ?? "").trim(),
+      music_title: String(formData.get("music_title") ?? "").trim(),
+      music_show_volume: getCheckbox(formData, "music_show_volume"),
       theme: String(formData.get("theme") ?? "dark") as ProfileTheme,
       accent_color: getColor(formData, "accent_color", "#ffffff"),
       page_background_color: getColor(
@@ -236,6 +238,7 @@ export async function uploadMusicAction(
 ): Promise<DashboardState> {
   const { supabase, profile } = await getOwnedProfile();
   const file = formData.get("file");
+  const musicTitle = String(formData.get("music_title") ?? "").trim();
 
   if (!(file instanceof File) || file.size === 0) {
     return { error: "Lütfen bir şarkı seçin." };
@@ -268,7 +271,11 @@ export async function uploadMusicAction(
 
   const { error } = await supabase
     .from("profiles")
-    .update({ music_url: publicUrl, updated_at: new Date().toISOString() })
+    .update({
+      music_url: publicUrl,
+      music_title: musicTitle || file.name.replace(/\.[^.]+$/, ""),
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", profile.id);
 
   if (error) {
@@ -287,7 +294,11 @@ export async function removeMusicAction(): Promise<void> {
 
   await supabase
     .from("profiles")
-    .update({ music_url: null, updated_at: new Date().toISOString() })
+    .update({
+      music_url: null,
+      music_title: null,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", profile.id);
 
   await removeOldProfileMedia(supabase, profile.music_url);

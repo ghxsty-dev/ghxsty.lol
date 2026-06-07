@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   LayoutDashboard,
@@ -49,8 +50,9 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-[#050507] text-white">
       <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5">
-        <Link href="/" className="text-lg font-bold tracking-normal">
-          LinkForge
+        <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-normal">
+          <Image src="/glitch-logo.png" alt="ghxsty.lol" width={28} height={28} className="rounded-md" />
+          ghxsty.lol
         </Link>
         <div className="flex items-center gap-2">
           {user ? (

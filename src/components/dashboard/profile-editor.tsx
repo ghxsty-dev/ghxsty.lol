@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { useActionState } from "react";
+import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { Music, Save, Trash2, Upload } from "lucide-react";
 import {
@@ -51,13 +53,24 @@ function StateMessage({ state }: { state: DashboardState }) {
 }
 
 export function ProfileEditor({ profile }: { profile: Profile }) {
+  const router = useRouter();
   const [profileState, profileAction] = useActionState(updateProfileAction, {});
   const [uploadState, uploadAction] = useActionState(uploadImageAction, {});
   const [musicState, musicAction] = useActionState(uploadMusicAction, {});
 
+  useEffect(() => {
+    if (profileState.success || uploadState.success || musicState.success) {
+      router.refresh();
+    }
+  }, [musicState.success, profileState.success, router, uploadState.success]);
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
       <form action={profileAction} className="space-y-5">
+        <input type="hidden" name="music_title" value={profile.music_title ?? ""} />
+        {(profile.music_show_volume ?? true) ? (
+          <input type="hidden" name="music_show_volume" value="on" />
+        ) : null}
         <div className="space-y-4 rounded-lg border border-white/10 bg-white/[0.04] p-4">
           <h3 className="text-sm font-semibold text-white">Kimlik</h3>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -320,7 +333,8 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         <SaveButton />
       </form>
 
-      <div className="space-y-4">
+      <div className="space-y-4 rounded-lg border border-white/10 bg-white/[0.04] p-4">
+        <h3 className="text-sm font-semibold text-white">Medya</h3>
         {(["avatar_url", "banner_url"] as const).map((field) => (
           <form key={field} action={uploadAction} className="space-y-3">
             <input type="hidden" name="field" value={field} />
@@ -333,6 +347,12 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         ))}
         <form action={musicAction} className="space-y-3">
           <Label htmlFor="music_url">Profil şarkısı</Label>
+          <Input
+            id="music_upload_title"
+            name="music_title"
+            defaultValue={profile.music_title ?? ""}
+            placeholder="Şarkı adı"
+          />
           <Input
             id="music_url"
             name="file"
@@ -351,10 +371,52 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
           {profile.music_url ? (
             <p className="flex items-center gap-2 text-xs text-zinc-400">
               <Music className="h-3.5 w-3.5" />
-              Public profil açıldığında otomatik çalmayı dener.
+              {profile.music_title ?? "Profil şarkısı"}
             </p>
           ) : null}
         </form>
+        {profile.music_url ? (
+          <form action={profileAction} className="space-y-3 rounded-md border border-white/10 bg-white/[0.04] p-3">
+            <input type="hidden" name="username" value={profile.username} />
+            <input type="hidden" name="display_name" value={profile.display_name ?? ""} />
+            <input type="hidden" name="bio" value={profile.bio ?? ""} />
+            <input type="hidden" name="theme" value={profile.theme} />
+            <input type="hidden" name="accent_color" value={profile.accent_color ?? "#ffffff"} />
+            <input type="hidden" name="page_background_color" value={profile.page_background_color ?? "#050507"} />
+            <input type="hidden" name="panel_background_color" value={profile.panel_background_color ?? "#111113"} />
+            <input type="hidden" name="text_color" value={profile.text_color ?? "#ffffff"} />
+            <input type="hidden" name="muted_text_color" value={profile.muted_text_color ?? "#d4d4d8"} />
+            <input type="hidden" name="button_background_color" value={profile.button_background_color ?? "#ffffff"} />
+            <input type="hidden" name="button_text_color" value={profile.button_text_color ?? "#ffffff"} />
+            <input type="hidden" name="header_background_style" value={profile.header_background_style ?? "gradient"} />
+            <input type="hidden" name="header_color" value={profile.header_color ?? "#74d9bf"} />
+            <input type="hidden" name="header_color_to" value={profile.header_color_to ?? "#2f9d8f"} />
+            {(profile.header_enabled ?? true) ? <input type="hidden" name="header_enabled" value="on" /> : null}
+            {(profile.panel_visible ?? true) ? <input type="hidden" name="panel_visible" value="on" /> : null}
+            {(profile.links_icon_only ?? false) ? <input type="hidden" name="links_icon_only" value="on" /> : null}
+            <input type="hidden" name="background_blur" value={profile.background_blur ?? 10} />
+            <input type="hidden" name="panel_opacity" value={profile.panel_opacity ?? 70} />
+            <input type="hidden" name="button_opacity" value={profile.button_opacity ?? 12} />
+            <input type="hidden" name="background_style" value={profile.background_style ?? "soft"} />
+            <input type="hidden" name="button_style" value={profile.button_style ?? "glass"} />
+            <input type="hidden" name="font_style" value={profile.font_style ?? "clean"} />
+            <div className="space-y-2">
+              <Label htmlFor="music_title">Şarkı adı</Label>
+              <Input id="music_title" name="music_title" defaultValue={profile.music_title ?? ""} />
+            </div>
+            <div className="flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.05] px-3 py-3">
+              <input
+                id="music_show_volume"
+                name="music_show_volume"
+                type="checkbox"
+                defaultChecked={profile.music_show_volume ?? true}
+                className="h-4 w-4 accent-white"
+              />
+              <Label htmlFor="music_show_volume">Ses kontrolünü göster</Label>
+            </div>
+            <SaveButton />
+          </form>
+        ) : null}
         <StateMessage state={uploadState} />
         <StateMessage state={musicState} />
       </div>
