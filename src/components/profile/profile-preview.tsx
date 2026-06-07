@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Music2 } from "lucide-react";
+import { Music2, Pause } from "lucide-react";
 import { getLinkIcon } from "@/lib/link-icons";
 import { cn } from "@/lib/utils";
 import type { Profile, ProfileLink } from "@/types/database";
@@ -109,14 +109,26 @@ export function ProfilePreview({
             </div>
 
             {profile.music_url ? (
-              <div className="relative mt-4 rounded-md border border-white/10 bg-black/25 px-3 py-3">
-                <div className="flex items-center justify-center gap-2 text-xs font-semibold">
+              <div
+                className={cn(
+                  "relative mt-4 min-h-20 px-3 py-3",
+                  panelVisible
+                    ? "rounded-md border border-white/10 bg-black/25"
+                    : "bg-transparent",
+                )}
+              >
+                {profile.music_show_volume ?? true ? (
+                  <div className="absolute right-2 top-2 h-6 w-14 rounded-full border border-white/10 bg-black/35" />
+                ) : null}
+                <div className="mx-auto flex max-w-[60%] items-center justify-center gap-2 text-xs font-semibold">
                   <Music2 className="h-3.5 w-3.5" />
                   <span className="truncate">
                     {profile.music_title ?? "Profil şarkısı"}
                   </span>
                 </div>
-                <div className="mx-auto mt-2 h-7 w-7 rounded-md bg-white/90" />
+                <div className="mx-auto mt-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-zinc-950">
+                  <Pause className="h-3.5 w-3.5" />
+                </div>
               </div>
             ) : null}
 

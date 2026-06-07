@@ -11,6 +11,36 @@ export type AuthState = {
   success?: string;
 };
 
+async function verifyTurnstile(formData: FormData) {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) {
+    return true;
+  }
+
+  const token = String(formData.get("cf-turnstile-response") ?? "");
+  if (!token) {
+    return false;
+  }
+
+  const response = await fetch(
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+    {
+      method: "POST",
+      body: new URLSearchParams({
+        secret,
+        response: token,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    return false;
+  }
+
+  const result = (await response.json()) as { success?: boolean };
+  return result.success === true;
+}
+
 export async function loginAction(
   _prevState: AuthState,
   formData: FormData,
@@ -49,6 +79,11 @@ export async function registerAction(
 
   if (password.length < 6) {
     return { error: "Şifre en az 6 karakter olmalıdır." };
+  }
+
+  const captchaOk = await verifyTurnstile(formData);
+  if (!captchaOk) {
+    return { error: "Bot koruması doğrulanamadı. Lütfen tekrar dene." };
   }
 
   const supabase = await createClient();

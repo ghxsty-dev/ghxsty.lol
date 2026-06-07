@@ -9,6 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default function RegisterPage() {
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#050507] px-4 py-10 text-white">
       <Card className="w-full max-w-md">
@@ -23,7 +25,7 @@ export default function RegisterPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <AuthForm mode="register" />
+          <AuthForm mode="register" turnstileSiteKey={turnstileSiteKey} />
         </CardContent>
       </Card>
     </main>

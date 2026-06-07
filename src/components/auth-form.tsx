@@ -11,10 +11,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Turnstile } from "@/components/turnstile";
 
 type AuthFormProps = {
   mode: "login" | "register";
   next?: string;
+  turnstileSiteKey?: string;
 };
 
 function SubmitButton({ mode }: { mode: "login" | "register" }) {
@@ -29,7 +31,7 @@ function SubmitButton({ mode }: { mode: "login" | "register" }) {
   );
 }
 
-export function AuthForm({ mode, next }: AuthFormProps) {
+export function AuthForm({ mode, next, turnstileSiteKey }: AuthFormProps) {
   const action = mode === "login" ? loginAction : registerAction;
   const [state, formAction] = useActionState(action, {});
   const isLogin = mode === "login";
@@ -72,6 +74,9 @@ export function AuthForm({ mode, next }: AuthFormProps) {
           required
         />
       </div>
+      {!isLogin && turnstileSiteKey ? (
+        <Turnstile siteKey={turnstileSiteKey} />
+      ) : null}
       {state.error ? (
         <p className="rounded-md border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm text-red-100">
           {state.error}

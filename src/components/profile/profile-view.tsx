@@ -170,6 +170,7 @@ export function ProfileView({ profile }: { profile: PublicProfile }) {
                 src={profile.music_url}
                 title={profile.music_title ?? "Profil şarkısı"}
                 showVolume={profile.music_show_volume ?? true}
+                transparent={!panelVisible}
                 overlay
               />
             </div>
@@ -177,8 +178,10 @@ export function ProfileView({ profile }: { profile: PublicProfile }) {
 
           <div
             className={cn(
-              "relative mt-8 grid",
-              linksIconOnly ? "grid-cols-6 gap-1.5" : "grid-cols-2 gap-3",
+              "relative mt-8",
+              linksIconOnly
+                ? "flex flex-wrap items-center justify-center gap-4"
+                : "grid grid-cols-2 gap-3",
             )}
           >
             {profile.profile_links.map((link) => {
@@ -190,35 +193,39 @@ export function ProfileView({ profile }: { profile: PublicProfile }) {
                   target="_blank"
                   rel="noreferrer"
                   className={cn(
-                    "flex min-w-0 items-center justify-between rounded-md border text-sm font-medium transition",
+                    "flex min-w-0 items-center text-sm font-medium transition",
                     linksIconOnly
-                      ? "mx-auto aspect-square h-11 w-11 justify-center p-0"
-                      : "min-h-12 gap-2 px-3 py-3",
+                      ? "justify-center p-1 hover:scale-110"
+                      : "min-h-12 justify-between gap-2 rounded-md border px-3 py-3",
                     getButtonStyle(profile.button_style),
                   )}
                   style={{
                     backgroundColor:
-                      profile.button_style === "outline"
+                      linksIconOnly
                         ? "transparent"
-                        : `${buttonBackgroundColor}${Math.round(
-                            (buttonOpacity / 100) * 255,
-                          )
-                            .toString(16)
-                            .padStart(2, "0")}`,
+                        : profile.button_style === "outline"
+                          ? "transparent"
+                          : `${buttonBackgroundColor}${Math.round(
+                              (buttonOpacity / 100) * 255,
+                            )
+                              .toString(16)
+                              .padStart(2, "0")}`,
                     color: buttonTextColor,
                     borderColor:
-                      profile.button_style === "outline" ||
-                      profile.button_style === "neon"
-                        ? accentColor
-                        : `${buttonBackgroundColor}55`,
+                      linksIconOnly
+                        ? "transparent"
+                        : profile.button_style === "outline" ||
+                            profile.button_style === "neon"
+                          ? accentColor
+                          : `${buttonBackgroundColor}55`,
                     boxShadow:
-                      profile.button_style === "neon"
+                      !linksIconOnly && profile.button_style === "neon"
                         ? `0 0 26px ${accentColor}33`
                         : undefined,
                   }}
                 >
                   <span className={cn("flex min-w-0 items-center", linksIconOnly ? "justify-center" : "gap-3")}>
-                    <Icon className={cn("shrink-0", linksIconOnly ? "h-6 w-6" : "h-4 w-4")} />
+                    <Icon className={cn("shrink-0", linksIconOnly ? "h-7 w-7" : "h-4 w-4")} />
                     {linksIconOnly ? null : (
                       <span className="truncate">{link.title}</span>
                     )}

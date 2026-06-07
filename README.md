@@ -53,6 +53,8 @@ CLOUDFLARE_R2_ACCESS_KEY_ID=your-access-key-id
 CLOUDFLARE_R2_SECRET_ACCESS_KEY=your-secret-access-key
 CLOUDFLARE_R2_BUCKET=ghxsty-media
 CLOUDFLARE_R2_PUBLIC_URL=https://cdn.ghxsty.lol
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=your-turnstile-site-key
+TURNSTILE_SECRET_KEY=your-turnstile-secret-key
 ```
 
 ## Supabase
@@ -74,6 +76,17 @@ CLOUDFLARE_R2_PUBLIC_URL=https://cdn.ghxsty.lol
 
 Avatar, arka plan ve müzik dosyaları R2 üzerinde tutulur. Supabase içinde yalnızca bu dosyaların public URL kayıtları saklanır.
 
+## Bot Koruması
+
+Kayıt formu Cloudflare Turnstile ile korunabilir.
+
+1. Cloudflare Dashboard > Turnstile içinden widget oluştur.
+2. Hostname olarak production domainini ve localhost geliştirme adresini ekle.
+3. Site key değerini `NEXT_PUBLIC_TURNSTILE_SITE_KEY` içine ekle.
+4. Secret key değerini `TURNSTILE_SECRET_KEY` içine ekle.
+
+`TURNSTILE_SECRET_KEY` tanımlıysa kayıt formunda gelen Turnstile token sunucuda doğrulanır.
+
 ## Vercel
 
 1. Repo’yu Vercel’e bağla.
@@ -86,6 +99,8 @@ Avatar, arka plan ve müzik dosyaları R2 üzerinde tutulur. Supabase içinde ya
    - `CLOUDFLARE_R2_SECRET_ACCESS_KEY`
    - `CLOUDFLARE_R2_BUCKET`
    - `CLOUDFLARE_R2_PUBLIC_URL`
+   - `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+   - `TURNSTILE_SECRET_KEY`
 3. Supabase Auth > URL Configuration içinde Site URL ve Redirect URLs değerlerine production domainini ekle.
 4. Deploy et.
 
