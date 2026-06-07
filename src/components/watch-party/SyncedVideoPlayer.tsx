@@ -155,6 +155,18 @@ export function SyncedVideoPlayer({
     >
       {event.video_url ? (
         <>
+          {event.thumbnail_url ? (
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 scale-110 bg-cover bg-center opacity-45 blur-2xl"
+              style={{ backgroundImage: `url(${event.thumbnail_url})` }}
+            />
+          ) : (
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.10),rgba(0,0,0,0.92)_62%)]"
+            />
+          )}
           <video
             ref={videoRef}
             data-watch-party-video="true"
@@ -162,7 +174,7 @@ export function SyncedVideoPlayer({
             poster={event.thumbnail_url ?? undefined}
             controls={isAdmin}
             playsInline
-            className="aspect-video w-full bg-black object-contain fullscreen:max-h-screen"
+            className="relative z-10 aspect-video w-full bg-transparent object-contain fullscreen:max-h-screen"
             onPlay={() => {
               if (!isAdmin && !event.is_playing) {
                 syncToState();
@@ -183,11 +195,11 @@ export function SyncedVideoPlayer({
             type="button"
             onClick={() => void toggleFullscreen()}
             title={isFullscreen ? "Tam ekrandan çık" : "Tam ekran"}
-            className="absolute bottom-3 right-3 inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-black/60 text-white backdrop-blur transition hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            className="absolute bottom-3 right-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-black/60 text-white backdrop-blur transition hover:bg-black/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
           >
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
-          <div className="absolute bottom-3 left-3 flex h-10 items-center gap-2 rounded-md border border-white/10 bg-black/60 px-3 text-white backdrop-blur">
+          <div className="absolute bottom-3 left-3 z-20 flex h-10 items-center gap-2 rounded-md border border-white/10 bg-black/60 px-3 text-white backdrop-blur">
             <button
               type="button"
               onClick={() => setMuted((current) => !current)}

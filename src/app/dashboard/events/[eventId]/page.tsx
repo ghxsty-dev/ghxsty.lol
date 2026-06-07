@@ -9,6 +9,7 @@ import {
 import { AdminPlaybackControls } from "@/components/watch-party/AdminPlaybackControls";
 import { EventChat } from "@/components/watch-party/EventChat";
 import { EventMediaUploader } from "@/components/watch-party/EventMediaUploader";
+import { EventPolls } from "@/components/watch-party/EventPoll";
 import { SyncedVideoPlayer } from "@/components/watch-party/SyncedVideoPlayer";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
@@ -17,16 +18,42 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { requireModeratorOrAdmin } from "@/lib/permissions";
-import type { EventMessage, WatchEvent } from "@/types/events";
+import type { EventMessage, EventPoll, WatchEvent } from "@/types/events";
 
 type PageProps = {
   params: Promise<{ eventId: string }>;
 };
 
+async function loadPolls(
+  supabase: Awaited<ReturnType<typeof requireModeratorOrAdmin>>["supabase"],
+  eventId: string,
+) {
+  const [{ data: polls }, { data: votes }] = await Promise.all([
+    supabase
+      .from("event_polls")
+      .select("*, options:event_poll_options(*)")
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: false }),
+    supabase.from("event_poll_votes").select("poll_id, option_id"),
+  ]);
+
+  const voteCounts = new Map<string, number>();
+  for (const vote of votes ?? []) {
+    voteCounts.set(vote.option_id, (voteCounts.get(vote.option_id) ?? 0) + 1);
+  }
+
+  return ((polls ?? []) as EventPoll[]).map((poll) => ({
+    ...poll,
+    options: (poll.options ?? [])
+      .map((option) => ({ ...option, votes: voteCounts.get(option.id) ?? 0 }))
+      .sort((a, b) => a.position - b.position),
+  }));
+}
+
 export default async function ManageEventPage({ params }: PageProps) {
   const { eventId } = await params;
-  const { supabase, user } = await requireModeratorOrAdmin("/dashboard");
-  const [{ data: event }, { data: messages }] = await Promise.all([
+  const { supabase, user, profile } = await requireModeratorOrAdmin("/dashboard");
+  const [{ data: event }, { data: messages }, polls] = await Promise.all([
     supabase.from("events").select("*").eq("id", eventId).maybeSingle(),
     supabase
       .from("event_messages")
@@ -35,6 +62,7 @@ export default async function ManageEventPage({ params }: PageProps) {
       .is("deleted_at", null)
       .order("created_at", { ascending: true })
       .limit(200),
+    loadPolls(supabase, eventId),
   ]);
 
   if (!event) {
@@ -45,7 +73,7 @@ export default async function ManageEventPage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
-      <div className="mx-auto max-w-7xl space-y-4">
+      <div className="mx-auto max-w-[1800px] space-y-4">
         <header className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link href="/dashboard/events" className="text-sm text-zinc-400 hover:text-white">Events</Link>
@@ -56,7 +84,7 @@ export default async function ManageEventPage({ params }: PageProps) {
           </Link>
         </header>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="space-y-4">
             <SyncedVideoPlayer initialEvent={typedEvent} isAdmin />
             <AdminPlaybackControls event={typedEvent} />
@@ -109,13 +137,15 @@ export default async function ManageEventPage({ params }: PageProps) {
             </Card>
           </div>
 
-          <aside className="space-y-4">
+          <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
             <EventChat
               eventId={typedEvent.id}
               initialMessages={(messages ?? []) as EventMessage[]}
               currentUserId={user.id}
+              currentDisplayName={profile.display_name || profile.username}
               canModerate
             />
+            <EventPolls eventId={typedEvent.id} initialPolls={polls} canModerate />
             <Card>
               <CardHeader><CardTitle>Duyuru Gönder</CardTitle></CardHeader>
               <CardContent>

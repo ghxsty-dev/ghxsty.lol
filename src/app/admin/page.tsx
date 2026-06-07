@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, ExternalLink, ShieldCheck, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, Calendar, ExternalLink, ShieldCheck, Trash2, Upload } from "lucide-react";
 import {
   applyCommunityThemeToProfileAction,
   clearCommunityThemeMediaAction,
@@ -82,9 +82,18 @@ export default async function AdminPage() {
               Admin Paneli
             </h1>
           </div>
-          <p className="text-sm text-zinc-400">
-            @{adminProfile.username} olarak yönetiyorsun.
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/dashboard/events"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
+            >
+              <Calendar className="h-4 w-4" />
+              Event Kontrolü
+            </Link>
+            <p className="text-sm text-zinc-400">
+              @{adminProfile.username} olarak yönetiyorsun.
+            </p>
+          </div>
         </header>
 
         <Card>

@@ -49,6 +49,7 @@ export function EventPolls({
     const channel = supabase
       .channel(`event-polls:${eventId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "event_polls", filter: `event_id=eq.${eventId}` }, () => void refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "event_poll_options" }, () => void refresh())
       .on("postgres_changes", { event: "*", schema: "public", table: "event_poll_votes" }, () => void refresh())
       .subscribe();
 

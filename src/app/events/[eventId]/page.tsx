@@ -71,7 +71,7 @@ export default async function EventPage({ params }: PageProps) {
         .order("created_at", { ascending: false }),
       loadPolls(eventId),
       user
-        ? supabase.from("profiles").select("role,is_admin").eq("user_id", user.id).maybeSingle()
+        ? supabase.from("profiles").select("role,is_admin,username,display_name").eq("user_id", user.id).maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
 
@@ -98,7 +98,7 @@ export default async function EventPage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-[#050507] p-3 text-white sm:p-4">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4">
+      <div className="mx-auto flex max-w-[1800px] flex-col gap-4">
         <header className="rounded-lg border border-white/10 bg-white/[0.04] p-4">
           <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Watch Party</p>
           <h1 className="mt-2 text-2xl font-bold">{event.title}</h1>
@@ -111,6 +111,7 @@ export default async function EventPage({ params }: PageProps) {
               eventId={event.id}
               initialMessages={(messages ?? []) as EventMessage[]}
               currentUserId={user?.id ?? null}
+              currentDisplayName={profile?.display_name || profile?.username || null}
               canModerate={canModerate}
             />
           }
