@@ -17,6 +17,7 @@ export type Profile = {
   music_url: string | null;
   music_title: string | null;
   music_show_volume: boolean | null;
+  music_volume_position: string | null;
   accent_color: string | null;
   page_background_color: string | null;
   panel_background_color: string | null;

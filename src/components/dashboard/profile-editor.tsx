@@ -94,6 +94,11 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
         {(profile.music_show_volume ?? true) ? (
           <input type="hidden" name="music_show_volume" value="on" />
         ) : null}
+        <input
+          type="hidden"
+          name="music_volume_position"
+          value={profile.music_volume_position ?? "top-right"}
+        />
         <div className="space-y-4 rounded-lg border border-white/10 bg-white/[0.04] p-4">
           <h3 className="text-sm font-semibold text-white">Kimlik</h3>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -338,6 +343,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             {(profile.header_enabled ?? true) ? <input type="hidden" name="header_enabled" value="on" /> : null}
             {(profile.panel_visible ?? true) ? <input type="hidden" name="panel_visible" value="on" /> : null}
             {(profile.links_icon_only ?? false) ? <input type="hidden" name="links_icon_only" value="on" /> : null}
+            <input type="hidden" name="music_volume_position" value={profile.music_volume_position ?? "top-right"} />
             <input type="hidden" name="background_blur" value={profile.background_blur ?? 10} />
             <input type="hidden" name="panel_opacity" value={profile.panel_opacity ?? 70} />
             <input type="hidden" name="button_opacity" value={profile.button_opacity ?? 12} />
@@ -357,6 +363,19 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
                 className="h-4 w-4 accent-white"
               />
               <Label htmlFor="music_show_volume">Ses kontrolünü göster</Label>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="music_volume_position">Ses kontrolü konumu</Label>
+              <Select
+                id="music_volume_position"
+                name="music_volume_position"
+                defaultValue={profile.music_volume_position ?? "top-right"}
+              >
+                <option value="top-right">Sağ üst</option>
+                <option value="top-left">Sol üst</option>
+                <option value="bottom-right">Sağ alt</option>
+                <option value="bottom-left">Sol alt</option>
+              </Select>
             </div>
             <SaveButton />
           </form>

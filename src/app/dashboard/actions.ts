@@ -72,6 +72,13 @@ function getCheckbox(formData: FormData, key: string) {
   return formData.get(key) === "on";
 }
 
+function getVolumePosition(formData: FormData) {
+  const value = String(formData.get("music_volume_position") ?? "top-right");
+  return ["top-right", "top-left", "bottom-right", "bottom-left"].includes(value)
+    ? value
+    : "top-right";
+}
+
 function getSupabaseStoragePathFromPublicUrl(url?: string | null) {
   if (!url) {
     return null;
@@ -136,6 +143,7 @@ export async function updateProfileAction(
       bio: String(formData.get("bio") ?? "").trim(),
       music_title: String(formData.get("music_title") ?? "").trim(),
       music_show_volume: getCheckbox(formData, "music_show_volume"),
+      music_volume_position: getVolumePosition(formData),
       theme: String(formData.get("theme") ?? "dark") as ProfileTheme,
       accent_color: getColor(formData, "accent_color", "#ffffff"),
       page_background_color: getColor(

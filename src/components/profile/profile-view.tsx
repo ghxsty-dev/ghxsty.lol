@@ -170,6 +170,7 @@ export function ProfileView({ profile }: { profile: PublicProfile }) {
                 src={profile.music_url}
                 title={profile.music_title ?? "Profil şarkısı"}
                 showVolume={profile.music_show_volume ?? true}
+                volumePosition={profile.music_volume_position ?? "top-right"}
                 transparent={!panelVisible}
                 overlay
               />

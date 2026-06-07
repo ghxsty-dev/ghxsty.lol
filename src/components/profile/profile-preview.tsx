@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Music2, Pause } from "lucide-react";
+import { Music2, Pause, Volume2 } from "lucide-react";
 import { getLinkIcon } from "@/lib/link-icons";
 import { cn } from "@/lib/utils";
 import type { Profile, ProfileLink } from "@/types/database";
@@ -11,6 +11,19 @@ function withAlpha(color: string | null | undefined, alpha: number) {
     .padStart(2, "0");
 
   return `${value}${suffix}`;
+}
+
+function getPreviewVolumePositionClass(position?: string | null) {
+  switch (position) {
+    case "top-left":
+      return "left-3 top-3";
+    case "bottom-right":
+      return "bottom-3 right-3";
+    case "bottom-left":
+      return "bottom-3 left-3";
+    default:
+      return "right-3 top-3";
+  }
 }
 
 export function ProfilePreview({
@@ -44,6 +57,17 @@ export function ProfilePreview({
           />
         ) : null}
         <div className="absolute inset-0 bg-black/35" />
+        {profile.music_url && (profile.music_show_volume ?? true) ? (
+          <div
+            className={cn(
+              "absolute z-20 flex h-8 w-20 items-center justify-center gap-2 rounded-full border border-white/10 bg-black/45 text-white backdrop-blur-xl",
+              getPreviewVolumePositionClass(profile.music_volume_position),
+            )}
+          >
+            <Volume2 className="h-3.5 w-3.5" />
+            <span className="h-1 w-9 rounded-full bg-white/70" />
+          </div>
+        ) : null}
 
         <div className="absolute inset-0 flex items-center justify-center p-5">
           <div
@@ -117,9 +141,6 @@ export function ProfilePreview({
                     : "bg-transparent",
                 )}
               >
-                {profile.music_show_volume ?? true ? (
-                  <div className="absolute right-2 top-2 h-6 w-14 rounded-full border border-white/10 bg-black/35" />
-                ) : null}
                 <div className="mx-auto flex max-w-[60%] items-center justify-center gap-2 text-xs font-semibold">
                   <Music2 className="h-3.5 w-3.5" />
                   <span className="truncate">
