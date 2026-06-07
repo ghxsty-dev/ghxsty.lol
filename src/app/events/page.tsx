@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calendar } from "lucide-react";
+import { Calendar, Home } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import type { WatchEvent } from "@/types/events";
@@ -16,10 +16,19 @@ export default async function EventsIndexPage() {
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
       <div className="mx-auto max-w-6xl">
-        <h1 className="flex items-center gap-2 text-3xl font-bold">
-          <Calendar className="h-7 w-7" />
-          Watch Party
-        </h1>
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="flex items-center gap-2 text-3xl font-bold">
+            <Calendar className="h-7 w-7" />
+            Watch Party
+          </h1>
+          <Link
+            href="/"
+            className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
+          >
+            <Home className="h-4 w-4" />
+            Ana menü
+          </Link>
+        </header>
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {events.length ? (
             events.map((event) => (

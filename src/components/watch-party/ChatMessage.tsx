@@ -88,9 +88,22 @@ export function ChatMessage({
           ) : null}
         </div>
         <div className="text-xs text-zinc-500">@{username}</div>
-        <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5 text-zinc-200">
-          {message.message}
-        </p>
+        {message.message_type === "gif" && message.gif_url ? (
+          <div className="mt-2 overflow-hidden rounded-md border border-white/10 bg-black/30">
+            <Image
+              src={message.gif_url}
+              alt={message.message}
+              width={260}
+              height={180}
+              unoptimized
+              className="max-h-64 w-auto max-w-full object-contain"
+            />
+          </div>
+        ) : (
+          <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5 text-zinc-200">
+            {message.message}
+          </p>
+        )}
       </div>
     </div>
   );

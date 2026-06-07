@@ -102,10 +102,18 @@ create table if not exists public.event_messages (
   event_id uuid not null references public.events(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
   message text not null,
+  message_type text not null default 'text',
+  gif_url text,
   created_at timestamptz not null default now(),
   deleted_at timestamptz,
   constraint event_messages_length check (char_length(trim(message)) between 1 and 500),
-  constraint event_messages_no_html check (message !~ '<[^>]*>')
+  constraint event_messages_no_html check (message !~ '<[^>]*>'),
+  constraint event_messages_type_check check (message_type in ('text', 'gif')),
+  constraint event_messages_gif_url_check check (
+    (message_type = 'text' and gif_url is null)
+    or
+    (message_type = 'gif' and gif_url ~ '^https://')
+  )
 );
 
 alter table public.event_messages
@@ -191,14 +199,35 @@ create trigger profiles_prevent_role_self_change
 before update on public.profiles
 for each row execute function public.prevent_role_self_change();
 
-create or replace function public.can_send_event_message(target_event_id uuid)
+create or replace function public.can_send_event_message(target_event_id uuid, next_message text)
 returns boolean
 language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  normalized_message text;
+  repeated_count integer;
 begin
   if auth.uid() is null then
+    return false;
+  end if;
+
+  normalized_message := lower(trim(coalesce(next_message, '')));
+
+  select count(*)
+  into repeated_count
+  from (
+    select lower(trim(event_messages.message)) as recent_message
+    from public.event_messages
+    where event_messages.user_id = auth.uid()
+      and event_messages.deleted_at is null
+    order by event_messages.created_at desc
+    limit 2
+  ) recent
+  where recent.recent_message = normalized_message;
+
+  if repeated_count >= 2 then
     return false;
   end if;
 
@@ -270,6 +299,8 @@ begin
   if old.event_id is distinct from new.event_id
     or old.user_id is distinct from new.user_id
     or old.message is distinct from new.message
+    or old.message_type is distinct from new.message_type
+    or old.gif_url is distinct from new.gif_url
     or old.created_at is distinct from new.created_at
   then
     raise exception 'Only message deletion is allowed.';
@@ -341,7 +372,7 @@ on public.event_messages
 for insert
 with check (
   user_id = auth.uid()
-  and public.can_send_event_message(event_id)
+  and public.can_send_event_message(event_id, message)
 );
 
 create policy "Users delete own event messages"
@@ -443,7 +474,7 @@ using (public.is_moderator_or_admin())
 with check (public.is_moderator_or_admin());
 
 grant execute on function public.is_moderator_or_admin() to anon, authenticated;
-grant execute on function public.can_send_event_message(uuid) to authenticated;
+grant execute on function public.can_send_event_message(uuid, text) to authenticated;
 grant execute on function public.can_vote_event_poll(uuid, uuid) to authenticated;
 
 do $$

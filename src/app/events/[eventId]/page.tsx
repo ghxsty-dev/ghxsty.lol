@@ -5,10 +5,12 @@ import { EventAnnouncements } from "@/components/watch-party/EventAnnouncements"
 import { EventChat } from "@/components/watch-party/EventChat";
 import { EventLayout } from "@/components/watch-party/EventLayout";
 import { EventPolls } from "@/components/watch-party/EventPoll";
+import { EventStatusWatcher } from "@/components/watch-party/EventStatusWatcher";
 import { SyncedVideoPlayer } from "@/components/watch-party/SyncedVideoPlayer";
 import { isModeratorOrAdminRole } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { EventAnnouncement, EventMessage, EventPoll, WatchEvent } from "@/types/events";
+import { Home } from "lucide-react";
 
 type PageProps = {
   params: Promise<{ eventId: string }>;
@@ -89,6 +91,9 @@ export default async function EventPage({ params }: PageProps) {
           <Link href="/events" className="mt-5 inline-flex rounded-md border border-white/10 px-4 py-2 text-sm hover:bg-white/10">
             Etkinliklere dön
           </Link>
+          <Link href="/" className="ml-2 mt-5 inline-flex rounded-md border border-white/10 px-4 py-2 text-sm hover:bg-white/10">
+            Ana menü
+          </Link>
         </div>
       </main>
     );
@@ -99,10 +104,20 @@ export default async function EventPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-[#050507] p-3 text-white sm:p-4">
       <div className="mx-auto flex max-w-[1800px] flex-col gap-4">
-        <header className="rounded-lg border border-white/10 bg-white/[0.04] p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Watch Party</p>
-          <h1 className="mt-2 text-2xl font-bold">{event.title}</h1>
-          {event.description ? <p className="mt-2 text-sm text-zinc-400">{event.description}</p> : null}
+        <EventStatusWatcher eventId={event.id} initialStatus={event.status} publicView />
+        <header className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Watch Party</p>
+            <h1 className="mt-2 text-2xl font-bold">{event.title}</h1>
+            {event.description ? <p className="mt-2 text-sm text-zinc-400">{event.description}</p> : null}
+          </div>
+          <Link
+            href="/"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
+          >
+            <Home className="h-4 w-4" />
+            Ana menü
+          </Link>
         </header>
         <EventLayout
           player={<SyncedVideoPlayer initialEvent={event as WatchEvent} isAdmin={canModerate} />}

@@ -10,6 +10,7 @@ import { AdminPlaybackControls } from "@/components/watch-party/AdminPlaybackCon
 import { EventChat } from "@/components/watch-party/EventChat";
 import { EventMediaUploader } from "@/components/watch-party/EventMediaUploader";
 import { EventPolls } from "@/components/watch-party/EventPoll";
+import { EventStatusWatcher } from "@/components/watch-party/EventStatusWatcher";
 import { SyncedVideoPlayer } from "@/components/watch-party/SyncedVideoPlayer";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button";
@@ -74,6 +75,7 @@ export default async function ManageEventPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
       <div className="mx-auto max-w-[1800px] space-y-4">
+        <EventStatusWatcher eventId={typedEvent.id} initialStatus={typedEvent.status} />
         <header className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link href="/dashboard/events" className="text-sm text-zinc-400 hover:text-white">Events</Link>

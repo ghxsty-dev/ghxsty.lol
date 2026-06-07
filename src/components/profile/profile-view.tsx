@@ -1,6 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { CSSProperties } from "react";
-import { ExternalLink, Eye } from "lucide-react";
+import { ExternalLink, Eye, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { THEMES } from "@/lib/themes";
 import {
@@ -76,6 +77,13 @@ export function ProfileView({
         />
       ) : null}
       <div className="absolute inset-0 z-0 bg-black/35" />
+      <Link
+        href="/"
+        className="fixed left-4 top-4 z-30 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white backdrop-blur transition hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+        title="Ana menü"
+      >
+        <Home className="h-4 w-4" />
+      </Link>
       <ProfileShare
         username={profile.username}
         displayName={displayName}

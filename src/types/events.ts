@@ -55,6 +55,8 @@ export type EventMessage = {
   event_id: string;
   user_id: string;
   message: string;
+  message_type?: "text" | "gif";
+  gif_url?: string | null;
   created_at: string;
   deleted_at: string | null;
   profile?: EventMessageProfile | null;
