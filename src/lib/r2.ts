@@ -4,6 +4,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 type R2Config = {
   bucket: string;
@@ -109,6 +110,47 @@ export async function deleteR2ObjectByUrl(url?: string | null) {
       Key: key,
     }),
   );
+}
+
+export async function deleteR2ObjectByKey(key?: string | null) {
+  if (!key) {
+    return;
+  }
+
+  const { bucket } = getR2Config();
+
+  await getR2Client().send(
+    new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    }),
+  );
+}
+
+export async function createR2PresignedUploadUrl({
+  key,
+  contentType,
+  expiresIn = 900,
+}: {
+  key: string;
+  contentType: string;
+  expiresIn?: number;
+}) {
+  const { bucket, publicUrl } = getR2Config();
+  const command = new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    ContentType: contentType,
+    CacheControl: "public, max-age=31536000, immutable",
+  });
+
+  const uploadUrl = await getSignedUrl(getR2Client(), command, { expiresIn });
+
+  return {
+    uploadUrl,
+    publicUrl: `${publicUrl}/${encodeURI(key)}`,
+    key,
+  };
 }
 
 export async function copyR2ObjectByUrl({

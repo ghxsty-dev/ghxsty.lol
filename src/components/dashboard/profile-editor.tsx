@@ -2,11 +2,10 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useActionState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
-import { Gamepad2, Music, Save, Trash2, Upload } from "lucide-react";
+import { Gamepad2, Music, Palette, Save, Trash2, Upload } from "lucide-react";
 import {
   disconnectDiscordAction,
   removeImageAction,
@@ -21,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { AvatarDecoration, Profile } from "@/types/database";
+import type { Profile } from "@/types/database";
 
 function SaveButton() {
   const { pending } = useFormStatus();
@@ -199,10 +198,8 @@ function AppearanceGroup({
 }
 export function ProfileEditor({
   profile,
-  decorations,
 }: {
   profile: Profile;
-  decorations: AvatarDecoration[];
 }) {
   const router = useRouter();
   const [profileState, profileAction] = useActionState(updateProfileAction, {});
@@ -220,6 +217,7 @@ export function ProfileEditor({
       <form action={profileAction} className="space-y-5">
         <input type="hidden" name="music_title" value={profile.music_title ?? ""} />
         <input type="hidden" name="theme" value={profile.theme} />
+        <input type="hidden" name="avatar_decoration_id" value={profile.avatar_decoration_id ?? ""} />
         <div className="space-y-4 rounded-lg border border-white/10 bg-white/[0.04] p-4">
           <h3 className="text-sm font-semibold text-white">Kimlik</h3>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -242,6 +240,30 @@ export function ProfileEditor({
                 required
               />
             </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+            <div className="space-y-2">
+              <Label htmlFor="username_password">
+                Kullanıcı adı değişim şifresi
+              </Label>
+              <Input
+                id="username_password"
+                name="username_password"
+                type="password"
+                autoComplete="current-password"
+                placeholder="Sadece kullanıcı adını değiştirirken gerekli"
+              />
+              <p className="text-xs text-zinc-500">
+                Kullanıcı adı 24 saatte en fazla 2 kez değiştirilebilir.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/avatar-decorations"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
+            >
+              <Palette className="h-4 w-4" />
+              Avatar dekorasyonları
+            </Link>
           </div>
           <div className="space-y-2">
             <Label htmlFor="bio">Hakkımda</Label>
@@ -389,35 +411,6 @@ export function ProfileEditor({
             </div>
           </AppearanceGroup>
 
-          <AppearanceGroup title="Avatar Dekorasyonu">
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="avatar_decoration_id">Seçili dekorasyon</Label>
-                <Select id="avatar_decoration_id" name="avatar_decoration_id" defaultValue={profile.avatar_decoration_id ?? ""}>
-                  <option value="">Yok</option>
-                  {decorations.map((decoration) => (
-                    <option key={decoration.id} value={decoration.id}>
-                      {decoration.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              {decorations.length ? (
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
-                  {decorations.slice(0, 8).map((decoration) => (
-                    <div key={decoration.id} className="flex items-center gap-3 rounded-md border border-white/10 bg-black/20 p-2">
-                      <Image src={decoration.image_url} alt="" width={40} height={40} unoptimized className="h-10 w-10 object-contain" />
-                      <span className="min-w-0 truncate text-xs text-zinc-300">{decoration.name}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="rounded-md border border-white/10 bg-black/20 p-3 text-sm text-zinc-500">
-                  Henüz aktif dekorasyon yok.
-                </p>
-              )}
-            </div>
-          </AppearanceGroup>
         </div>
         <StateMessage state={profileState} />
         <SaveButton />

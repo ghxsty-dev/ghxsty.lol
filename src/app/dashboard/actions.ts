@@ -21,7 +21,8 @@ import {
   validateImage,
   validateUsername,
 } from "@/lib/validation";
-import type { ProfileTheme } from "@/types/database";
+import type { User } from "@supabase/supabase-js";
+import type { Profile, ProfileTheme } from "@/types/database";
 
 export type DashboardState = {
   error?: string;
@@ -95,7 +96,7 @@ async function getOwnedProfile() {
     redirect("/login");
   }
 
-  return { supabase, profile: resolvedProfile };
+  return { supabase, user, profile: resolvedProfile as Profile };
 }
 
 function getColor(formData: FormData, key: string, fallback: string) {
@@ -134,6 +135,71 @@ function getVolumePosition(formData: FormData) {
   return ["top-right", "top-left", "bottom-right", "bottom-left"].includes(value)
     ? value
     : "top-right";
+}
+
+function getChatNameEffect(effect: string) {
+  if (effect.includes("neon")) {
+    return "neon";
+  }
+
+  if (effect.includes("gradient") || effect === "fire") {
+    return "gradient";
+  }
+
+  if (effect === "shine" || effect === "sparkle") {
+    return "sparkle";
+  }
+
+  if (effect === "pulse" || effect === "glitch" || effect === "float") {
+    return "glow";
+  }
+
+  return "none";
+}
+
+async function validateUsernameChange(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  user: User,
+  profile: Profile,
+  nextUsername: string,
+  password: string,
+) {
+  if (nextUsername === profile.username) {
+    return null;
+  }
+
+  if (!password) {
+    return "Kullanıcı adını değiştirmek için mevcut şifreni girmelisin.";
+  }
+
+  if (!user.email) {
+    return "Bu hesapta email bilgisi olmadığı için kullanıcı adı değiştirilemedi.";
+  }
+
+  const { count, error: countError } = await supabase
+    .from("username_change_logs")
+    .select("*", { count: "exact", head: true })
+    .eq("profile_id", profile.id)
+    .gte("changed_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+  if (countError) {
+    return `Kullanıcı adı limiti kontrol edilemedi: ${countError.message}`;
+  }
+
+  if ((count ?? 0) >= 2) {
+    return "Kullanıcı adını 24 saat içinde en fazla 2 kez değiştirebilirsin.";
+  }
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password,
+  });
+
+  if (error) {
+    return "Şifre doğrulanamadı. Kullanıcı adı değişmedi.";
+  }
+
+  return null;
 }
 
 function getSupabaseStoragePathFromPublicUrl(url?: string | null) {
@@ -189,13 +255,30 @@ export async function updateProfileAction(
   _prevState: DashboardState,
   formData: FormData,
 ): Promise<DashboardState> {
-  const { supabase, profile } = await getOwnedProfile();
+  const { supabase, user, profile } = await getOwnedProfile();
   const username = normalizeUsername(String(formData.get("username") ?? ""));
   const usernameError = validateUsername(username);
 
   if (usernameError) {
     return { error: usernameError };
   }
+
+  const usernamePassword = String(formData.get("username_password") ?? "");
+  const usernameChangeError = await validateUsernameChange(
+    supabase,
+    user,
+    profile,
+    username,
+    usernamePassword,
+  );
+
+  if (usernameChangeError) {
+    return { error: usernameChangeError };
+  }
+
+  const displayNameEffect = String(
+    formData.get("display_name_effect") ?? "none",
+  ).trim();
 
   const { error } = await supabase
     .from("profiles")
@@ -244,9 +327,8 @@ export async function updateProfileAction(
       background_style: String(formData.get("background_style") ?? "soft").trim(),
       button_style: String(formData.get("button_style") ?? "glass").trim(),
       font_style: String(formData.get("font_style") ?? "clean").trim(),
-      display_name_effect: String(
-        formData.get("display_name_effect") ?? "none",
-      ).trim(),
+      display_name_effect: displayNameEffect,
+      name_effect: getChatNameEffect(displayNameEffect),
       updated_at: new Date().toISOString(),
     })
     .eq("id", profile.id);
@@ -260,10 +342,63 @@ export async function updateProfileAction(
     };
   }
 
+  if (username !== profile.username) {
+    await supabase.from("username_change_logs").insert({
+      profile_id: profile.id,
+      old_username: profile.username,
+      new_username: username,
+    });
+  }
+
   revalidatePath("/dashboard");
   revalidatePath(`/${profile.username}`);
   revalidatePath(`/${username}`);
   return { success: "Profil güncellendi." };
+}
+
+export async function setAvatarDecorationAction(formData: FormData) {
+  const { supabase, profile } = await getOwnedProfile();
+  const decorationId = String(formData.get("avatar_decoration_id") ?? "").trim();
+
+  if (!decorationId) {
+    await supabase
+      .from("profiles")
+      .update({
+        avatar_decoration_id: null,
+        avatar_decoration_url: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", profile.id);
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/avatar-decorations");
+    revalidatePath(`/${profile.username}`);
+    return;
+  }
+
+  const { data: decoration } = await supabase
+    .from("avatar_decorations")
+    .select("id,image_url,is_active")
+    .eq("id", decorationId)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!decoration) {
+    return;
+  }
+
+  await supabase
+    .from("profiles")
+    .update({
+      avatar_decoration_id: decoration.id,
+      avatar_decoration_url: decoration.image_url,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", profile.id);
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/avatar-decorations");
+  revalidatePath(`/${profile.username}`);
 }
 
 export async function submitCommunityThemeAction(

@@ -10,8 +10,11 @@ export type Profile = {
   id: string;
   user_id: string;
   is_admin: boolean | null;
+  role: "user" | "moderator" | "admin";
   view_count: number | null;
   avatar_decoration_id: string | null;
+  avatar_decoration_url: string | null;
+  name_effect: "none" | "glow" | "gradient" | "neon" | "sparkle";
   username: string;
   display_name: string | null;
   bio: string | null;

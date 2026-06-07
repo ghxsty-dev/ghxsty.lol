@@ -132,7 +132,6 @@ export default async function DashboardPage() {
                 <ProfileEditor
                   key={typedProfile.updated_at}
                   profile={typedProfile}
-                  decorations={decorations}
                 />
               </CardContent>
             </Card>
