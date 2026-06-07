@@ -64,6 +64,25 @@ export async function loginAction(
   redirect(next.startsWith("/") ? next : "/dashboard");
 }
 
+export async function discordLoginAction(formData: FormData) {
+  const next = String(formData.get("next") ?? "/dashboard");
+  const safeNext = next.startsWith("/") ? next : "/dashboard";
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "discord",
+    options: {
+      redirectTo: `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(safeNext)}`,
+      scopes: "identify",
+    },
+  });
+
+  if (error || !data.url) {
+    redirect("/login?oauth=discord-error");
+  }
+
+  redirect(data.url);
+}
+
 export async function registerAction(
   _prevState: AuthState,
   formData: FormData,

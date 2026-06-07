@@ -65,7 +65,12 @@ DISCORD_REDIRECT_URI=http://localhost:3000/api/discord/callback
 1. Supabase projesi oluştur.
 2. `supabase/schema.sql` dosyasını SQL Editor içinde çalıştır.
 3. Authentication > Providers altında Email provider açık olmalı.
-4. Google OAuth istenirse Authentication > Providers > Google içinden client bilgileri girilebilir.
+4. Discord ile giriş için Authentication > Providers > Discord açık olmalı.
+5. Discord Developer Portal > OAuth2 > Redirects içine Supabase callback URL eklenmeli:
+   - `https://PROJECT_REF.supabase.co/auth/v1/callback`
+6. Supabase Auth > URL Configuration içinde app callback URL değerleri eklenmeli:
+   - `http://localhost:3000/auth/callback`
+   - `https://ghxsty.lol/auth/callback`
 
 Şifreler uygulama veritabanında tutulmaz. Kimlik doğrulama tamamen Supabase Auth üzerinden yapılır.
 

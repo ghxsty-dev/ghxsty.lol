@@ -35,7 +35,7 @@ export const ALLOWED_AUDIO_TYPES = [
 export const ALLOWED_AUDIO_EXTENSIONS = ["mp3", "wav", "ogg", "webm", "m4a"];
 
 export const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
-export const MAX_AUDIO_UPLOAD_SIZE = 5 * 1024 * 1024;
+export const MAX_AUDIO_UPLOAD_SIZE = 10 * 1024 * 1024;
 
 export function validateUsername(username: string) {
   if (!USERNAME_REGEX.test(username)) {
@@ -72,7 +72,7 @@ export function validateAudio(file: File) {
   }
 
   if (file.size > MAX_AUDIO_UPLOAD_SIZE) {
-    return "Şarkı dosyası 5 MB sınırını aşamaz.";
+    return "Şarkı dosyası 10 MB sınırını aşamaz.";
   }
 
   return null;

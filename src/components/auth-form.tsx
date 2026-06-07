@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { LogIn, UserPlus } from "lucide-react";
+import { FaDiscord } from "react-icons/fa6";
 import {
+  discordLoginAction,
   loginAction,
   registerAction,
 } from "@/app/(auth)/actions";
@@ -88,6 +90,20 @@ export function AuthForm({ mode, next, turnstileSiteKey }: AuthFormProps) {
         </p>
       ) : null}
       <SubmitButton mode={mode} />
+      <div className="flex items-center gap-3 text-xs text-zinc-500">
+        <span className="h-px flex-1 bg-white/10" />
+        veya
+        <span className="h-px flex-1 bg-white/10" />
+      </div>
+      <Button
+        type="submit"
+        formAction={discordLoginAction}
+        variant="secondary"
+        className="w-full"
+      >
+        <FaDiscord className="h-4 w-4" />
+        Discord ile devam et
+      </Button>
       <p className="text-center text-sm text-zinc-400">
         {isLogin ? "Hesabın yok mu?" : "Zaten hesabın var mı?"}{" "}
         <Link
