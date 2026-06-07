@@ -22,6 +22,43 @@ export type DashboardState = {
 
 export type LinkState = DashboardState;
 
+export async function completeUsernameSetupAction(
+  _prevState: DashboardState,
+  formData: FormData,
+): Promise<DashboardState> {
+  const { supabase, profile } = await getOwnedProfile();
+  const username = normalizeUsername(String(formData.get("username") ?? ""));
+  const usernameError = validateUsername(username);
+
+  if (usernameError) {
+    return { error: usernameError };
+  }
+
+  const displayName = String(formData.get("display_name") ?? "").trim();
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      username,
+      display_name: displayName || username,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", profile.id);
+
+  if (error) {
+    return {
+      error:
+        error.code === "23505"
+          ? "Bu kullanıcı adı zaten alınmış."
+          : `Kullanıcı adı kaydedilemedi: ${error.message}`,
+    };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
+  revalidatePath(`/${username}`);
+  return { success: "Kullanıcı adı kaydedildi." };
+}
+
 async function getOwnedProfile() {
   const supabase = await createClient();
   const {

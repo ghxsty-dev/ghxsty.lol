@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { signOutAction } from "@/app/(auth)/actions";
 import { LinkManager } from "@/components/dashboard/link-manager";
 import { ProfileEditor } from "@/components/dashboard/profile-editor";
+import { UsernameSetup } from "@/components/dashboard/username-setup";
 import { ProfilePreview } from "@/components/profile/profile-preview";
 import {
   Card,
@@ -15,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ensureUserProfile } from "@/lib/profile";
+import { ensureUserProfile, hasTemporaryUsername } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
 import type { Profile, ProfileLink } from "@/types/database";
 
@@ -83,6 +84,10 @@ export default async function DashboardPage() {
             </form>
           </div>
         </header>
+
+        {hasTemporaryUsername(typedProfile) ? (
+          <UsernameSetup profile={typedProfile} />
+        ) : null}
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div className="space-y-6">
