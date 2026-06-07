@@ -31,18 +31,18 @@ export default async function Home() {
   ];
   const features = [
     {
-      title: "Güvenli auth",
-      text: "Şifreler Supabase Auth tarafından yönetilir.",
+      title: "Güvenli hesap",
+      text: "Hesabın güvenli oturum akışıyla korunur.",
       Icon: ShieldCheck,
     },
     {
       title: "Tema sistemi",
-      text: "Dark, Light, Midnight, Cyberpunk, Anime ve Glass.",
+      text: "Renk, font, arka plan, şeffaflık ve link görünümünü özelleştir.",
       Icon: Palette,
     },
     {
       title: "Medya yükleme",
-      text: "Avatar ve banner Supabase Storage üzerinde tutulur.",
+      text: "Avatar, arka plan görseli ve profil şarkısı ekle.",
       Icon: Upload,
     },
   ];
@@ -97,14 +97,14 @@ export default async function Home() {
       <section className="mx-auto grid w-full max-w-6xl gap-10 px-4 pb-14 pt-10 lg:grid-cols-[1fr_0.85fr] lg:items-center">
         <div>
           <p className="mb-4 inline-flex rounded-md border border-white/10 bg-white/[0.06] px-3 py-1 text-sm text-zinc-300">
-            Guns.lol, Carrd ve Linktree ruhunda
+            Kendi public profil alanın
           </p>
           <h1 className="max-w-3xl text-5xl font-bold leading-tight tracking-normal sm:text-6xl">
             Tüm kimliğini tek, hızlı ve temalı profilde topla.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-300">
             Benzersiz kullanıcı URL’i, sosyal linkler, görsel yükleme, tema
-            seçimi ve Supabase Auth ile güvenli hesap akışı.
+            seçimi ve kişisel müzik alanıyla tek sayfada seni anlatan bir profil.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link

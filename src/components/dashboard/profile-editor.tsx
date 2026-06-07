@@ -52,6 +52,29 @@ function StateMessage({ state }: { state: DashboardState }) {
   );
 }
 
+function ColorField({
+  id,
+  label,
+  defaultValue,
+}: {
+  id: string;
+  label: string;
+  defaultValue: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        name={id}
+        type="color"
+        defaultValue={defaultValue}
+        className="h-12 w-16 rounded-md p-1"
+      />
+    </div>
+  );
+}
+
 export function ProfileEditor({ profile }: { profile: Profile }) {
   const router = useRouter();
   const [profileState, profileAction] = useActionState(updateProfileAction, {});
@@ -119,75 +142,14 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             </Select>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="accent_color">Vurgu rengi</Label>
-            <Input
-              id="accent_color"
-              name="accent_color"
-              type="color"
-              defaultValue={profile.accent_color ?? "#ffffff"}
-              className="h-11 p-1"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="page_background_color">Sayfa arka plan rengi</Label>
-            <Input
-              id="page_background_color"
-              name="page_background_color"
-              type="color"
-              defaultValue={profile.page_background_color ?? "#050507"}
-              className="h-11 p-1"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="panel_background_color">Panel rengi</Label>
-            <Input
-              id="panel_background_color"
-              name="panel_background_color"
-              type="color"
-              defaultValue={profile.panel_background_color ?? "#111113"}
-              className="h-11 p-1"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="text_color">Ana yazı rengi</Label>
-            <Input
-              id="text_color"
-              name="text_color"
-              type="color"
-              defaultValue={profile.text_color ?? "#ffffff"}
-              className="h-11 p-1"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="muted_text_color">İkincil yazı rengi</Label>
-            <Input
-              id="muted_text_color"
-              name="muted_text_color"
-              type="color"
-              defaultValue={profile.muted_text_color ?? "#d4d4d8"}
-              className="h-11 p-1"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="button_background_color">Link arka plan rengi</Label>
-            <Input
-              id="button_background_color"
-              name="button_background_color"
-              type="color"
-              defaultValue={profile.button_background_color ?? "#ffffff"}
-              className="h-11 p-1"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="button_text_color">Link yazı rengi</Label>
-            <Input
-              id="button_text_color"
-              name="button_text_color"
-              type="color"
-              defaultValue={profile.button_text_color ?? "#ffffff"}
-              className="h-11 p-1"
-            />
+          <div className="grid grid-cols-2 gap-3 sm:col-span-2 md:grid-cols-4">
+            <ColorField id="accent_color" label="Vurgu" defaultValue={profile.accent_color ?? "#ffffff"} />
+            <ColorField id="page_background_color" label="Sayfa" defaultValue={profile.page_background_color ?? "#050507"} />
+            <ColorField id="panel_background_color" label="Panel" defaultValue={profile.panel_background_color ?? "#111113"} />
+            <ColorField id="text_color" label="Ana yazı" defaultValue={profile.text_color ?? "#ffffff"} />
+            <ColorField id="muted_text_color" label="İkincil yazı" defaultValue={profile.muted_text_color ?? "#d4d4d8"} />
+            <ColorField id="button_background_color" label="Link bg" defaultValue={profile.button_background_color ?? "#ffffff"} />
+            <ColorField id="button_text_color" label="Link yazı" defaultValue={profile.button_text_color ?? "#ffffff"} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="background_style">Arka plan</Label>
@@ -213,26 +175,8 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
               <option value="solid">Tek renk</option>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="header_color">Üst alan rengi</Label>
-            <Input
-              id="header_color"
-              name="header_color"
-              type="color"
-              defaultValue={profile.header_color ?? "#74d9bf"}
-              className="h-11 p-1"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="header_color_to">Üst alan gradyan rengi</Label>
-            <Input
-              id="header_color_to"
-              name="header_color_to"
-              type="color"
-              defaultValue={profile.header_color_to ?? "#2f9d8f"}
-              className="h-11 p-1"
-            />
-          </div>
+          <ColorField id="header_color" label="Üst alan" defaultValue={profile.header_color ?? "#74d9bf"} />
+          <ColorField id="header_color_to" label="Üst gradyan" defaultValue={profile.header_color_to ?? "#2f9d8f"} />
           <div className="flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.05] px-3 py-3 sm:col-span-2">
             <input
               id="header_enabled"

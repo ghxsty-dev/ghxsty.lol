@@ -175,7 +175,12 @@ export function ProfileView({ profile }: { profile: PublicProfile }) {
             </div>
           ) : null}
 
-          <div className="relative mt-8 grid grid-cols-2 gap-3">
+          <div
+            className={cn(
+              "relative mt-8 grid",
+              linksIconOnly ? "grid-cols-6 gap-1.5" : "grid-cols-2 gap-3",
+            )}
+          >
             {profile.profile_links.map((link) => {
               const Icon = getLinkIcon(link.icon);
               return (
@@ -187,7 +192,7 @@ export function ProfileView({ profile }: { profile: PublicProfile }) {
                   className={cn(
                     "flex min-w-0 items-center justify-between rounded-md border text-sm font-medium transition",
                     linksIconOnly
-                      ? "mx-auto aspect-square h-14 w-14 justify-center p-0"
+                      ? "mx-auto aspect-square h-11 w-11 justify-center p-0"
                       : "min-h-12 gap-2 px-3 py-3",
                     getButtonStyle(profile.button_style),
                   )}

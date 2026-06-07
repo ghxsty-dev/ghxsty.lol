@@ -111,13 +111,13 @@ export default async function DashboardPage() {
             </Card>
           </div>
 
-          <aside className="xl:sticky xl:top-6 xl:self-start">
+          <aside className="xl:sticky xl:top-4 xl:self-start">
             <Card>
-              <CardHeader>
+              <CardHeader className="p-4">
                 <CardTitle>Canlı önizleme</CardTitle>
                 <CardDescription>Public profil görünümünün kompakt hali.</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0">
                 <ProfilePreview profile={typedProfile} links={links} />
               </CardContent>
             </Card>
