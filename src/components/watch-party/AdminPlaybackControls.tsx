@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { FormEvent } from "react";
 import { Pause, Play, RotateCcw, SkipForward, Square } from "lucide-react";
 import { endEventAction, playbackAction } from "@/app/dashboard/events/actions";
 import { Button } from "@/components/ui/button";
@@ -10,12 +11,36 @@ import type { WatchEvent } from "@/types/events";
 export function AdminPlaybackControls({ event }: { event: WatchEvent }) {
   const [position, setPosition] = useState(String(Math.floor(event.playback_position ?? 0)));
 
+  function getVideoPosition() {
+    const video = document.querySelector<HTMLVideoElement>("[data-watch-party-video='true']");
+    if (!video || !Number.isFinite(video.currentTime)) {
+      return position;
+    }
+
+    return String(Math.max(0, Math.floor(video.currentTime)));
+  }
+
+  function prepareSubmit(command: string) {
+    return (submitEvent: FormEvent<HTMLFormElement>) => {
+      const form = submitEvent.currentTarget;
+      const positionInput = form.elements.namedItem("position");
+      const nextPosition =
+        command === "restart" ? "0" : command === "seek" ? position : getVideoPosition();
+
+      if (positionInput instanceof HTMLInputElement) {
+        positionInput.value = nextPosition;
+      }
+
+      setPosition(nextPosition);
+    };
+  }
+
   function hidden(command: string) {
     return (
       <>
         <input type="hidden" name="event_id" value={event.id} />
         <input type="hidden" name="command" value={command} />
-        <input type="hidden" name="position" value={position} />
+        <input type="hidden" name="position" defaultValue={position} />
       </>
     );
   }
@@ -31,7 +56,7 @@ export function AdminPlaybackControls({ event }: { event: WatchEvent }) {
           onChange={(event) => setPosition(event.target.value)}
           placeholder="Saniye"
         />
-        <form action={playbackAction}>
+        <form action={playbackAction} onSubmit={prepareSubmit("seek")}>
           {hidden("seek")}
           <Button type="submit" variant="secondary">
             <SkipForward className="h-4 w-4" />
@@ -40,21 +65,21 @@ export function AdminPlaybackControls({ event }: { event: WatchEvent }) {
         </form>
       </div>
       <div className="flex flex-wrap gap-2">
-        <form action={playbackAction}>
+        <form action={playbackAction} onSubmit={prepareSubmit("play")}>
           {hidden("play")}
           <Button type="submit">
             <Play className="h-4 w-4" />
             Play
           </Button>
         </form>
-        <form action={playbackAction}>
+        <form action={playbackAction} onSubmit={prepareSubmit("pause")}>
           {hidden("pause")}
           <Button type="submit" variant="secondary">
             <Pause className="h-4 w-4" />
             Pause
           </Button>
         </form>
-        <form action={playbackAction}>
+        <form action={playbackAction} onSubmit={prepareSubmit("restart")}>
           {hidden("restart")}
           <Button type="submit" variant="secondary">
             <RotateCcw className="h-4 w-4" />

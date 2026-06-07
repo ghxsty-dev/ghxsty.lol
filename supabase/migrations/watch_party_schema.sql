@@ -202,6 +202,14 @@ begin
     return false;
   end if;
 
+  if public.is_moderator_or_admin() then
+    return exists (
+      select 1 from public.events
+      where id = target_event_id
+        and status <> 'deleted'
+    );
+  end if;
+
   if not exists (
     select 1 from public.events
     where id = target_event_id

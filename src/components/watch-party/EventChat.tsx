@@ -85,6 +85,17 @@ export function EventChat({
     });
 
     if (insertError) {
+      const message = insertError.message.toLowerCase();
+      if (message.includes("row-level security") || insertError.code === "42501") {
+        setError("Mesaj gönderilemedi. Etkinlik live değil veya chat yetkin yok.");
+        return;
+      }
+
+      if (message.includes("check constraint")) {
+        setError("Mesaj boş, çok uzun veya HTML içeriyor.");
+        return;
+      }
+
       setError("Yavaşla: 3 saniyede 1 mesaj gönderebilirsin.");
       return;
     }

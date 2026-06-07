@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
+  Calendar,
   LayoutDashboard,
   Palette,
   ShieldCheck,
@@ -45,6 +46,11 @@ export default async function Home() {
       text: "Avatar, arka plan görseli ve profil şarkısı ekle.",
       Icon: Upload,
     },
+    {
+      title: "Watch Party",
+      text: "Etkinliklerde videoyu herkesle aynı anda senkron izle.",
+      Icon: Calendar,
+    },
   ];
 
   return (
@@ -66,6 +72,12 @@ export default async function Home() {
             className="hidden h-10 items-center justify-center rounded-md px-4 text-sm font-medium text-zinc-200 transition hover:bg-white/10 hover:text-white sm:inline-flex"
           >
             Temalar
+          </Link>
+          <Link
+            href="/events"
+            className="hidden h-10 items-center justify-center rounded-md px-4 text-sm font-medium text-zinc-200 transition hover:bg-white/10 hover:text-white sm:inline-flex"
+          >
+            Etkinlikler
           </Link>
           {user ? (
             <>
@@ -134,6 +146,13 @@ export default async function Home() {
                 Giriş yap
               </Link>
             ) : null}
+            <Link
+              href="/events"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-5 text-sm font-medium text-white transition hover:bg-white/15"
+            >
+              Etkinlikler
+              <Calendar className="h-4 w-4" />
+            </Link>
           </div>
         </div>
 
@@ -156,7 +175,7 @@ export default async function Home() {
       </section>
 
       <section className="border-t border-white/10 bg-white/[0.03]">
-        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 md:grid-cols-3">
+        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 md:grid-cols-2 xl:grid-cols-4">
           {features.map(({ title, text, Icon }) => (
             <div key={title} className="rounded-lg border border-white/10 bg-white/[0.05] p-5">
               <Icon className="mb-4 h-5 w-5 text-zinc-300" />

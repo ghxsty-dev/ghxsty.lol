@@ -83,6 +83,23 @@ DISCORD_REDIRECT_URI=http://localhost:3000/api/discord/callback
 3. Account ID, Access Key ID ve Secret Access Key değerlerini `.env.local` içine ekle.
 4. Bucket için public/custom domain ayarla. Önerilen: `cdn.ghxsty.lol`.
 5. `CLOUDFLARE_R2_PUBLIC_URL` değerini bu public domain olarak gir.
+6. R2 bucket CORS policy içine upload için şu izinleri ekle:
+
+```json
+[
+  {
+    "AllowedOrigins": [
+      "http://localhost:3000",
+      "https://ghxsty.lol",
+      "https://www.ghxsty.lol"
+    ],
+    "AllowedMethods": ["GET", "PUT", "HEAD"],
+    "AllowedHeaders": ["Content-Type"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
 
 Avatar, arka plan ve müzik dosyaları R2 üzerinde tutulur. Supabase içinde yalnızca bu dosyaların public URL kayıtları saklanır.
 
