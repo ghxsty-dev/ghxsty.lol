@@ -1,5 +1,7 @@
 alter table public.profiles add column if not exists music_url text;
 alter table public.profiles add column if not exists is_admin boolean default false;
+alter table public.profiles add column if not exists view_count integer not null default 0;
+alter table public.profiles add column if not exists avatar_decoration_id uuid;
 alter table public.profiles add column if not exists discord_id text;
 alter table public.profiles add column if not exists discord_username text;
 alter table public.profiles add column if not exists discord_global_name text;
@@ -33,6 +35,103 @@ alter table public.profiles add column if not exists background_style text defau
 alter table public.profiles add column if not exists button_style text default 'glass';
 alter table public.profiles add column if not exists font_style text default 'clean';
 alter table public.profiles add column if not exists display_name_effect text default 'none';
+
+create table if not exists public.avatar_decorations (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  image_url text not null,
+  is_active boolean not null default true,
+  created_by_profile_id uuid references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint avatar_decorations_name_length check (char_length(name) between 2 and 40),
+  constraint avatar_decorations_image_url_check check (
+    image_url ~ '^https?://' or image_url ~ '^/avatar-decorations/'
+  )
+);
+
+alter table public.profiles
+  drop constraint if exists profiles_avatar_decoration_id_fkey;
+
+alter table public.profiles
+  add constraint profiles_avatar_decoration_id_fkey
+  foreign key (avatar_decoration_id)
+  references public.avatar_decorations(id)
+  on delete set null;
+
+alter table public.avatar_decorations enable row level security;
+
+drop trigger if exists avatar_decorations_set_updated_at on public.avatar_decorations;
+
+create trigger avatar_decorations_set_updated_at
+before update on public.avatar_decorations
+for each row execute function public.set_updated_at();
+
+drop policy if exists "Avatar decorations are public" on public.avatar_decorations;
+drop policy if exists "Admins insert avatar decorations" on public.avatar_decorations;
+drop policy if exists "Admins update avatar decorations" on public.avatar_decorations;
+drop policy if exists "Admins delete avatar decorations" on public.avatar_decorations;
+
+create policy "Avatar decorations are public"
+on public.avatar_decorations
+for select
+using (true);
+
+create policy "Admins insert avatar decorations"
+on public.avatar_decorations
+for insert
+with check (
+  exists (
+    select 1
+    from public.profiles admin_profiles
+    where admin_profiles.user_id = auth.uid()
+      and (admin_profiles.is_admin = true or admin_profiles.username = 'ghxsty')
+  )
+);
+
+create policy "Admins update avatar decorations"
+on public.avatar_decorations
+for update
+using (
+  exists (
+    select 1
+    from public.profiles admin_profiles
+    where admin_profiles.user_id = auth.uid()
+      and (admin_profiles.is_admin = true or admin_profiles.username = 'ghxsty')
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.profiles admin_profiles
+    where admin_profiles.user_id = auth.uid()
+      and (admin_profiles.is_admin = true or admin_profiles.username = 'ghxsty')
+  )
+);
+
+create policy "Admins delete avatar decorations"
+on public.avatar_decorations
+for delete
+using (
+  exists (
+    select 1
+    from public.profiles admin_profiles
+    where admin_profiles.user_id = auth.uid()
+      and (admin_profiles.is_admin = true or admin_profiles.username = 'ghxsty')
+  )
+);
+
+insert into public.avatar_decorations (name, image_url, is_active)
+values
+  ('Neon Crown', '/avatar-decorations/neon-crown.svg', true),
+  ('Crystal Orbit', '/avatar-decorations/crystal-orbit.svg', true),
+  ('Inferno Halo', '/avatar-decorations/inferno-halo.svg', true),
+  ('Void Stars', '/avatar-decorations/void-stars.svg', true)
+on conflict (name) do update
+set
+  image_url = excluded.image_url,
+  is_active = excluded.is_active,
+  updated_at = now();
 
 create unique index if not exists profiles_discord_id_unique
   on public.profiles(discord_id)

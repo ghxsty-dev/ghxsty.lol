@@ -1,125 +1,32 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { THEMES } from "@/lib/themes";
+import {
+  getBackgroundEffectClass,
+  getButtonEffectClass,
+  getDisplayNameEffectClass,
+  getFontStyleClass,
+} from "@/lib/profile-visuals";
 import { DiscordCard } from "@/components/profile/discord-card";
 import { getLinkIcon } from "@/lib/link-icons";
+import { AvatarFrame } from "@/components/profile/avatar-frame";
 import { ProfileAudio } from "@/components/profile/profile-audio";
 import { ProfileShare } from "@/components/profile/profile-share";
 import { ProfileVote } from "@/components/profile/profile-vote";
 import type { ProfileVoteScore, PublicProfile } from "@/types/database";
 
-function getBackgroundStyle(style?: string | null) {
-  switch (style) {
-    case "aurora":
-      return "bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,.22),transparent_28%),radial-gradient(circle_at_80%_10%,rgba(217,70,239,.22),transparent_30%),radial-gradient(circle_at_50%_90%,rgba(74,222,128,.14),transparent_32%)]";
-    case "grid":
-      return "bg-[linear-gradient(rgba(255,255,255,.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.06)_1px,transparent_1px)] bg-[size:28px_28px]";
-    case "noise":
-      return "bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,.16)_1px,transparent_0)] bg-[size:14px_14px]";
-    case "rings":
-      return "bg-[radial-gradient(circle_at_center,transparent_0,transparent_18%,rgba(255,255,255,.10)_19%,transparent_20%,transparent_38%,rgba(255,255,255,.08)_39%,transparent_40%)]";
-    case "scanlines":
-      return "bg-[linear-gradient(rgba(255,255,255,.07)_1px,transparent_1px)] bg-[size:100%_6px]";
-    case "spotlight":
-      return "bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,.22),transparent_38%)]";
-    case "vignette":
-      return "bg-[radial-gradient(circle_at_center,transparent_0,rgba(0,0,0,.12)_42%,rgba(0,0,0,.62)_100%)]";
-    case "minimal":
-      return "";
-    default:
-      return "bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,.14),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(255,255,255,.10),transparent_32%)]";
-  }
-}
-
-function getButtonStyle(style?: string | null) {
-  switch (style) {
-    case "glow":
-      return "border-white/20 bg-white/10 shadow-[0_0_30px_var(--profile-accent)] hover:shadow-[0_0_44px_var(--profile-accent)] hover:brightness-125";
-    case "hologram":
-      return "border-white/20 bg-[linear-gradient(110deg,rgba(255,255,255,.16),rgba(34,211,238,.14),rgba(217,70,239,.14),rgba(255,255,255,.10))] hover:saturate-150";
-    case "lift":
-      return "hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/30";
-    case "solid":
-      return "border-transparent hover:brightness-110";
-    case "outline":
-      return "border-current bg-transparent hover:bg-white/10";
-    case "neon":
-      return "border-current bg-white/5 shadow-[0_0_24px_rgba(255,255,255,.16)] hover:bg-white/10";
-    case "pulse":
-      return "animate-[profile-pulse_2.4s_ease-in-out_infinite] border-white/20 bg-white/10";
-    case "shine":
-      return "overflow-hidden border-white/20 bg-white/10 before:absolute before:inset-y-0 before:-left-1/2 before:w-1/3 before:skew-x-[-18deg] before:bg-white/25 before:blur-sm before:transition before:duration-700 hover:before:left-[120%]";
-    default:
-      return "";
-  }
-}
-
-function getFontStyle(style?: string | null) {
-  switch (style) {
-    case "display":
-      return "font-[Trebuchet_MS]";
-    case "rounded":
-      return "font-[Verdana]";
-    case "condensed":
-      return "font-[Arial_Narrow]";
-    case "elegant":
-      return "font-[Georgia]";
-    case "wide":
-      return "tracking-[0.04em]";
-    case "bold":
-      return "font-black";
-    case "mono":
-      return "font-mono";
-    case "serif":
-      return "font-serif";
-    case "cyber":
-      return "font-[Orbitron,Arial,sans-serif] tracking-[0.06em]";
-    case "editorial":
-      return "font-[Didot,Georgia,serif]";
-    case "impact":
-      return "font-[Impact,Arial_Black,sans-serif]";
-    case "pixel":
-      return "font-[Courier_New,monospace] tracking-[0.08em]";
-    case "script":
-      return "font-[Brush_Script_MT,cursive]";
-    case "soft-serif":
-      return "font-[Palatino,Georgia,serif]";
-    case "terminal":
-      return "font-[Lucida_Console,Monaco,monospace]";
-    default:
-      return "";
-  }
-}
-
-function getDisplayNameEffect(style?: string | null) {
-  switch (style) {
-    case "float":
-      return "animate-[profile-float_4s_ease-in-out_infinite]";
-    case "glitch":
-      return "profile-name-glitch";
-    case "gradient-shift":
-      return "animate-[profile-gradient_4s_linear_infinite] bg-[linear-gradient(90deg,var(--profile-accent),#fff,#67e8f9,var(--profile-accent))] bg-[length:300%_100%] bg-clip-text text-transparent";
-    case "neon-flicker":
-      return "animate-[profile-flicker_3.2s_linear_infinite] drop-shadow-[0_0_14px_var(--profile-accent)]";
-    case "pulse":
-      return "animate-[profile-name-pulse_2.8s_ease-in-out_infinite]";
-    case "shine":
-      return "profile-name-shine";
-    default:
-      return "";
-  }
-}
-
 export function ProfileView({
   profile,
   voteScore,
   currentVote,
+  viewCount,
 }: {
   profile: PublicProfile;
   voteScore?: ProfileVoteScore | null;
   currentVote?: 1 | -1 | null;
+  viewCount?: number;
 }) {
   const theme = THEMES[profile.theme] ?? THEMES.dark;
   const displayName = profile.display_name || profile.username;
@@ -146,8 +53,8 @@ export function ProfileView({
       className={cn(
         "relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8 sm:py-12",
         theme.page,
-        getBackgroundStyle(profile.background_style),
-        getFontStyle(profile.font_style),
+        getBackgroundEffectClass(profile.background_style),
+        getFontStyleClass(profile.font_style),
       )}
       style={
         {
@@ -173,6 +80,7 @@ export function ProfileView({
         username={profile.username}
         displayName={displayName}
         avatarUrl={profile.avatar_url}
+        avatarDecoration={profile.avatar_decoration}
         accentColor={accentColor}
       />
 
@@ -206,23 +114,15 @@ export function ProfileView({
           ) : null}
 
           <div className={cn("relative text-center", headerEnabled ? "pt-16" : "pt-4")}>
-            <div className="mx-auto h-28 w-28 overflow-hidden rounded-full border-4 border-white/20 bg-zinc-900 shadow-xl">
-              {profile.avatar_url ? (
-                <Image
-                  src={profile.avatar_url}
-                  alt={displayName}
-                  width={112}
-                  height={112}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-4xl font-bold">
-                  {displayName.slice(0, 1).toUpperCase()}
-                </div>
-              )}
-            </div>
+            <AvatarFrame
+              src={profile.avatar_url}
+              fallback={displayName}
+              alt={displayName}
+              decoration={profile.avatar_decoration}
+              size="lg"
+            />
             <h1 className="mt-4 text-3xl font-bold tracking-normal">
-              <span className={cn("inline-block", getDisplayNameEffect(profile.display_name_effect))}>
+              <span className={cn("inline-block", getDisplayNameEffectClass(profile.display_name_effect))}>
                 {displayName}
               </span>
             </h1>
@@ -238,15 +138,6 @@ export function ProfileView({
               </p>
             ) : null}
           </div>
-
-          <ProfileVote
-            profileId={profile.id}
-            username={profile.username}
-            initialScore={voteScore?.score ?? 0}
-            initialUpvotes={voteScore?.upvotes ?? 0}
-            initialDownvotes={voteScore?.downvotes ?? 0}
-            initialVote={currentVote ?? null}
-          />
 
           <DiscordCard profile={profile} radius={buttonRadius} />
 
@@ -285,7 +176,7 @@ export function ProfileView({
                     linksIconOnly
                       ? "justify-center p-1 hover:scale-110"
                       : "min-h-12 justify-between gap-2 rounded-md border px-3 py-3",
-                    getButtonStyle(profile.button_style),
+                    getButtonEffectClass(profile.button_style),
                   )}
                   style={{
                     borderRadius: linksIconOnly ? undefined : `${buttonRadius}px`,
@@ -325,6 +216,21 @@ export function ProfileView({
                 </a>
               );
             })}
+          </div>
+
+          <div className="relative mt-6 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/25 px-3 py-2 text-xs text-zinc-200 shadow-lg shadow-black/20 backdrop-blur-xl">
+              <Eye className="h-3.5 w-3.5" />
+              <span>{viewCount ?? profile.view_count ?? 0}</span>
+            </div>
+            <ProfileVote
+              profileId={profile.id}
+              username={profile.username}
+              initialScore={voteScore?.score ?? 0}
+              initialUpvotes={voteScore?.upvotes ?? 0}
+              initialDownvotes={voteScore?.downvotes ?? 0}
+              initialVote={currentVote ?? null}
+            />
           </div>
         </div>
       </section>

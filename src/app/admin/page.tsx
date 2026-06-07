@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, ExternalLink, ShieldCheck, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft, ExternalLink, ShieldCheck, Trash2, Upload } from "lucide-react";
 import {
   applyCommunityThemeToProfileAction,
   clearCommunityThemeMediaAction,
   cloneProfileAsCommunityThemeAction,
+  createAvatarDecorationAction,
+  deleteAvatarDecorationAction,
   deleteCommunityThemeAction,
   setCommunityThemeStatusAction,
   setProfileAdminAction,
+  updateAvatarDecorationAction,
   updateCommunityThemeAction,
   updateProfileFromAdminAction,
 } from "@/app/admin/actions";
@@ -21,6 +25,7 @@ import { ensureUserProfile } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
 import type {
   CommunityThemeWithAuthor,
+  AvatarDecoration,
   Profile,
 } from "@/types/database";
 
@@ -56,6 +61,11 @@ export default async function AdminPage() {
   const themes = (rawThemes ?? []) as CommunityThemeWithAuthor[];
   const pendingThemes = themes.filter((theme) => theme.status === "pending");
   const approvedThemes = themes.filter((theme) => theme.status === "approved");
+  const { data: rawDecorations } = await supabase
+    .from("avatar_decorations")
+    .select("*")
+    .order("created_at", { ascending: false });
+  const decorations = (rawDecorations ?? []) as AvatarDecoration[];
 
   return (
     <main className="min-h-screen bg-[#050507] p-3 text-white sm:p-4">
@@ -75,6 +85,71 @@ export default async function AdminPage() {
             @{adminProfile.username} olarak yönetiyorsun.
           </p>
         </header>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Avatar Dekorasyonları</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form action={createAvatarDecorationAction} className="mb-4 grid gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-4 md:grid-cols-[1fr_1fr_auto_auto] md:items-end">
+              <div className="space-y-2">
+                <Label htmlFor="new-decoration-name">Dekorasyon adı</Label>
+                <Input id="new-decoration-name" name="name" placeholder="Neon Crown" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-decoration-file">400x400 PNG/WebP/GIF</Label>
+                <Input id="new-decoration-file" name="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+              </div>
+              <label className="flex h-10 items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 text-sm text-zinc-200">
+                <input name="is_active" type="checkbox" defaultChecked className="h-4 w-4 accent-white" />
+                Aktif
+              </label>
+              <Button type="submit">
+                <Upload className="h-4 w-4" />
+                Ekle
+              </Button>
+            </form>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {decorations.map((decoration) => (
+                <article key={decoration.id} className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+                  <div className="mb-3 flex items-center gap-3">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-black/30">
+                      <Image
+                        src={decoration.image_url}
+                        alt=""
+                        width={64}
+                        height={64}
+                        unoptimized
+                        className="h-16 w-16 object-contain"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{decoration.name}</p>
+                      <p className="text-xs text-zinc-500">{decoration.is_active ? "Aktif" : "Pasif"}</p>
+                    </div>
+                  </div>
+                  <form action={updateAvatarDecorationAction} className="space-y-3">
+                    <input type="hidden" name="decoration_id" value={decoration.id} />
+                    <Input name="name" defaultValue={decoration.name} />
+                    <Input name="file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+                    <label className="flex items-center gap-2 text-sm text-zinc-300">
+                      <input name="is_active" type="checkbox" defaultChecked={decoration.is_active ?? true} className="h-4 w-4 accent-white" />
+                      Kullanıcılara göster
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="submit" size="sm">Kaydet</Button>
+                      <Button formAction={deleteAvatarDecorationAction} size="sm" variant="destructive">
+                        <Trash2 className="h-4 w-4" />
+                        Sil
+                      </Button>
+                    </div>
+                  </form>
+                </article>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -228,6 +303,9 @@ export default async function AdminPage() {
                           <option value="hologram">Hologram</option>
                           <option value="pulse">Pulse</option>
                           <option value="lift">Lift</option>
+                          <option value="chromatic">Chromatic</option>
+                          <option value="plasma">Plasma</option>
+                          <option value="matrix">Matrix</option>
                         </select>
                       </div>
                       <div className="space-y-2">
@@ -255,6 +333,8 @@ export default async function AdminPage() {
                           <option value="float">Float</option>
                           <option value="shine">Shine</option>
                           <option value="pulse">Pulse</option>
+                          <option value="wave">Wave</option>
+                          <option value="fire">Fire</option>
                         </select>
                       </div>
                       <div className="space-y-2">
@@ -359,6 +439,20 @@ export default async function AdminPage() {
                     <div className="space-y-2 lg:col-span-2">
                       <Label htmlFor={`bio-${profile.id}`}>Bio</Label>
                       <Textarea id={`bio-${profile.id}`} name="bio" defaultValue={profile.bio ?? ""} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`decoration-${profile.id}`}>Avatar dekorasyonu</Label>
+                      <select
+                        id={`decoration-${profile.id}`}
+                        name="avatar_decoration_id"
+                        defaultValue={profile.avatar_decoration_id ?? ""}
+                        className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none"
+                      >
+                        <option value="">Yok</option>
+                        {decorations.filter((decoration) => decoration.is_active).map((decoration) => (
+                          <option key={decoration.id} value={decoration.id}>{decoration.name}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor={`accent-${profile.id}`}>Vurgu</Label>

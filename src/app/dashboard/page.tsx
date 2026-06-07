@@ -23,6 +23,7 @@ import type {
   CommunityThemeWithAuthor,
   Profile,
   ProfileLink,
+  AvatarDecoration,
 } from "@/types/database";
 
 export const metadata: Metadata = {
@@ -65,6 +66,14 @@ export default async function DashboardPage() {
     .eq("status", "approved")
     .order("approved_at", { ascending: false });
   const communityThemes = (rawCommunityThemes ?? []) as CommunityThemeWithAuthor[];
+  const { data: rawDecorations } = await supabase
+    .from("avatar_decorations")
+    .select("*")
+    .eq("is_active", true)
+    .order("name", { ascending: true });
+  const decorations = (rawDecorations ?? []) as AvatarDecoration[];
+  const activeDecoration =
+    decorations.find((decoration) => decoration.id === typedProfile.avatar_decoration_id) ?? null;
   const isAdmin = Boolean(typedProfile.is_admin) || typedProfile.username === "ghxsty";
 
   return (
@@ -120,7 +129,11 @@ export default async function DashboardPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ProfileEditor key={typedProfile.updated_at} profile={typedProfile} />
+                <ProfileEditor
+                  key={typedProfile.updated_at}
+                  profile={typedProfile}
+                  decorations={decorations}
+                />
               </CardContent>
             </Card>
 
@@ -160,6 +173,7 @@ export default async function DashboardPage() {
                   key={typedProfile.updated_at}
                   profile={typedProfile}
                   links={links}
+                  decoration={activeDecoration}
                 />
               </CardContent>
             </Card>

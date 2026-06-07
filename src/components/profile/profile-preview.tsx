@@ -2,8 +2,15 @@ import Image from "next/image";
 import type { CSSProperties } from "react";
 import { Music2, Pause, Volume2 } from "lucide-react";
 import { getLinkIcon } from "@/lib/link-icons";
+import {
+  getBackgroundEffectClass,
+  getButtonEffectClass,
+  getDisplayNameEffectClass,
+  getFontStyleClass,
+} from "@/lib/profile-visuals";
 import { cn } from "@/lib/utils";
-import type { Profile, ProfileLink } from "@/types/database";
+import { AvatarFrame } from "@/components/profile/avatar-frame";
+import type { AvatarDecoration, Profile, ProfileLink } from "@/types/database";
 
 function withAlpha(color: string | null | undefined, alpha: number) {
   const value = color ?? "#111113";
@@ -30,9 +37,11 @@ function getPreviewVolumePositionClass(position?: string | null) {
 export function ProfilePreview({
   profile,
   links,
+  decoration,
 }: {
   profile: Profile;
   links: ProfileLink[];
+  decoration?: AvatarDecoration | null;
 }) {
   const displayName = profile.display_name || profile.username;
   const panelVisible = profile.panel_visible ?? true;
@@ -40,17 +49,15 @@ export function ProfilePreview({
   const shownLinks = links.slice(0, 6);
   const panelRadius = Math.min(32, Math.max(0, profile.panel_radius ?? 8));
   const buttonRadius = Math.min(32, Math.max(0, profile.button_radius ?? 6));
-  const nameEffectClass =
-    profile.display_name_effect === "gradient-shift"
-      ? "bg-[linear-gradient(90deg,var(--profile-accent),#fff,#67e8f9,var(--profile-accent))] bg-[length:300%_100%] bg-clip-text text-transparent"
-      : profile.display_name_effect === "neon-flicker"
-        ? "drop-shadow-[0_0_12px_var(--profile-accent)]"
-        : "";
 
   return (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-black">
       <div
-        className="relative aspect-[9/14] min-h-[560px] overflow-hidden"
+        className={cn(
+          "relative min-h-[640px] overflow-hidden",
+          getBackgroundEffectClass(profile.background_style),
+          getFontStyleClass(profile.font_style),
+        )}
         style={
           {
             "--profile-accent": profile.accent_color ?? "#ffffff",
@@ -83,10 +90,10 @@ export function ProfilePreview({
           </div>
         ) : null}
 
-        <div className="absolute inset-0 flex items-center justify-center p-5">
+        <div className="absolute inset-0 flex items-center justify-center overflow-y-auto p-5">
           <div
             className={cn(
-              "relative w-full max-w-[330px] overflow-hidden rounded-lg p-5 text-center",
+              "relative my-auto w-full max-w-[340px] overflow-hidden rounded-lg p-5 text-center",
               panelVisible
                 ? "border border-white/10 shadow-2xl shadow-black/40 backdrop-blur-xl"
                 : "border border-transparent",
@@ -115,23 +122,17 @@ export function ProfilePreview({
             ) : null}
 
             <div className="relative">
-              <div className="mx-auto h-20 w-20 overflow-hidden rounded-full border-4 border-white/20 bg-zinc-900">
-                {profile.avatar_url ? (
-                  <Image
-                    src={profile.avatar_url}
-                    alt={displayName}
-                    width={80}
-                    height={80}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-2xl font-bold">
-                    {displayName.slice(0, 1).toUpperCase()}
-                  </div>
-                )}
-              </div>
+              <AvatarFrame
+                src={profile.avatar_url}
+                fallback={displayName}
+                alt={displayName}
+                decoration={decoration}
+                size="md"
+              />
               <h3 className="mt-3 truncate text-xl font-bold">
-                <span className={nameEffectClass}>{displayName}</span>
+                <span className={cn("inline-block", getDisplayNameEffectClass(profile.display_name_effect))}>
+                  {displayName}
+                </span>
               </h3>
               <p
                 className="mt-1 truncate text-xs"
@@ -186,9 +187,11 @@ export function ProfilePreview({
                     key={link.id}
                     className={cn(
                       "flex min-w-0 items-center text-xs",
+                      "relative",
                       linksIconOnly
                         ? "justify-center p-1"
                         : "h-10 gap-2 rounded-md border px-3",
+                      getButtonEffectClass(profile.button_style),
                     )}
                     style={{
                       borderRadius: linksIconOnly ? undefined : `${buttonRadius}px`,

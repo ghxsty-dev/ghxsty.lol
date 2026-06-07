@@ -79,13 +79,13 @@ export function ProfileVote({
   }
 
   return (
-    <div className="mt-6 flex items-center justify-center gap-3">
+    <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-black/25 p-1 text-white shadow-lg shadow-black/20 backdrop-blur-xl">
       <button
         type="button"
         disabled={isPending}
         onClick={() => submitVote(1)}
         className={cn(
-          "flex h-10 items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 text-sm text-white backdrop-blur-xl transition hover:bg-white/10 disabled:opacity-60",
+          "flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs transition hover:bg-white/10 disabled:opacity-60",
           voteState.currentVote === 1 && "border-emerald-300/50 bg-emerald-400/15 text-emerald-100",
         )}
         aria-label="Profile tik at"
@@ -93,7 +93,7 @@ export function ProfileVote({
         <ThumbsUp className="h-4 w-4" />
         {voteState.upvotes}
       </button>
-      <span className="min-w-10 rounded-full border border-white/10 bg-black/20 px-3 py-1 text-center text-sm font-semibold text-white">
+      <span className="min-w-8 rounded-full bg-white/10 px-2 py-1 text-center text-xs font-semibold text-white">
         {voteState.score}
       </span>
       <button
@@ -101,7 +101,7 @@ export function ProfileVote({
         disabled={isPending}
         onClick={() => submitVote(-1)}
         className={cn(
-          "flex h-10 items-center gap-2 rounded-full border border-white/10 bg-black/25 px-4 text-sm text-white backdrop-blur-xl transition hover:bg-white/10 disabled:opacity-60",
+          "flex h-8 items-center gap-1.5 rounded-full px-2.5 text-xs transition hover:bg-white/10 disabled:opacity-60",
           voteState.currentVote === -1 && "border-red-300/50 bg-red-400/15 text-red-100",
         )}
         aria-label="Profile down bırak"

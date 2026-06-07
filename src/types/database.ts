@@ -10,6 +10,8 @@ export type Profile = {
   id: string;
   user_id: string;
   is_admin: boolean | null;
+  view_count: number | null;
+  avatar_decoration_id: string | null;
   username: string;
   display_name: string | null;
   bio: string | null;
@@ -50,6 +52,16 @@ export type Profile = {
   font_style: string | null;
   display_name_effect: string | null;
   theme: ProfileTheme;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AvatarDecoration = {
+  id: string;
+  name: string;
+  image_url: string;
+  is_active: boolean | null;
+  created_by_profile_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -127,6 +139,7 @@ export type ProfileVoteScore = {
 
 export type PublicProfile = Profile & {
   profile_links: ProfileLink[];
+  avatar_decoration?: AvatarDecoration | null;
 };
 
 export type Database = {
@@ -144,6 +157,15 @@ export type Database = {
         Row: ProfileLink;
         Insert: Omit<ProfileLink, "id"> & { id?: string };
         Update: Partial<Omit<ProfileLink, "id" | "profile_id">>;
+      };
+      avatar_decorations: {
+        Row: AvatarDecoration;
+        Insert: Omit<AvatarDecoration, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<AvatarDecoration, "id" | "created_at">>;
       };
       profile_votes: {
         Row: ProfileVote;
@@ -167,6 +189,12 @@ export type Database = {
     Views: {
       profile_vote_scores: {
         Row: ProfileVoteScore;
+      };
+    };
+    Functions: {
+      increment_profile_view: {
+        Args: { target_profile_id: string };
+        Returns: number;
       };
     };
   };

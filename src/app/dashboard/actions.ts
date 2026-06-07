@@ -122,6 +122,13 @@ function getCheckbox(formData: FormData, key: string) {
   return formData.get(key) === "on";
 }
 
+function getOptionalUuid(formData: FormData, key: string) {
+  const value = String(formData.get(key) ?? "").trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+    ? value
+    : null;
+}
+
 function getVolumePosition(formData: FormData) {
   const value = String(formData.get("music_volume_position") ?? "top-right");
   return ["top-right", "top-left", "bottom-right", "bottom-left"].includes(value)
@@ -194,6 +201,7 @@ export async function updateProfileAction(
     .from("profiles")
     .update({
       username,
+      avatar_decoration_id: getOptionalUuid(formData, "avatar_decoration_id"),
       display_name: String(formData.get("display_name") ?? "").trim(),
       bio: String(formData.get("bio") ?? "").trim(),
       music_title: String(formData.get("music_title") ?? "").trim(),

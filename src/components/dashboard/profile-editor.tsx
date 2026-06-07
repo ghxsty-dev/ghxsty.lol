@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useActionState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
@@ -20,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { Profile } from "@/types/database";
+import type { AvatarDecoration, Profile } from "@/types/database";
 
 function SaveButton() {
   const { pending } = useFormStatus();
@@ -77,7 +78,13 @@ function ColorField({
   );
 }
 
-export function ProfileEditor({ profile }: { profile: Profile }) {
+export function ProfileEditor({
+  profile,
+  decorations,
+}: {
+  profile: Profile;
+  decorations: AvatarDecoration[];
+}) {
   const router = useRouter();
   const [profileState, profileAction] = useActionState(updateProfileAction, {});
   const [uploadState, uploadAction] = useActionState(uploadImageAction, {});
@@ -140,6 +147,41 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             <ColorField id="muted_text_color" label="İkincil yazı" defaultValue={profile.muted_text_color ?? "#d4d4d8"} />
             <ColorField id="button_background_color" label="Link bg" defaultValue={profile.button_background_color ?? "#ffffff"} />
             <ColorField id="button_text_color" label="Link yazı" defaultValue={profile.button_text_color ?? "#ffffff"} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="avatar_decoration_id">Avatar dekorasyonu</Label>
+            <Select
+              id="avatar_decoration_id"
+              name="avatar_decoration_id"
+              defaultValue={profile.avatar_decoration_id ?? ""}
+            >
+              <option value="">Yok</option>
+              {decorations.map((decoration) => (
+                <option key={decoration.id} value={decoration.id}>
+                  {decoration.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:col-span-2 md:grid-cols-4">
+            {decorations.slice(0, 8).map((decoration) => (
+              <div
+                key={decoration.id}
+                className="flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.04] p-2"
+              >
+                <Image
+                  src={decoration.image_url}
+                  alt=""
+                  width={40}
+                  height={40}
+                  unoptimized
+                  className="h-10 w-10 object-contain"
+                />
+                <span className="min-w-0 truncate text-xs text-zinc-300">
+                  {decoration.name}
+                </span>
+              </div>
+            ))}
           </div>
           <div className="space-y-2">
             <Label htmlFor="background_style">Arka plan</Label>
@@ -307,6 +349,9 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
               <option value="hologram">Hologram</option>
               <option value="pulse">Pulse</option>
               <option value="lift">Lift</option>
+              <option value="chromatic">Chromatic</option>
+              <option value="plasma">Plasma</option>
+              <option value="matrix">Matrix</option>
             </Select>
           </div>
           <div className="space-y-2">
@@ -348,6 +393,8 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
               <option value="float">Float</option>
               <option value="shine">Shine</option>
               <option value="pulse">Pulse</option>
+              <option value="wave">Wave</option>
+              <option value="fire">Fire</option>
             </Select>
           </div>
           </div>
@@ -448,6 +495,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             <input type="hidden" name="display_name" value={profile.display_name ?? ""} />
             <input type="hidden" name="bio" value={profile.bio ?? ""} />
             <input type="hidden" name="theme" value={profile.theme} />
+            <input type="hidden" name="avatar_decoration_id" value={profile.avatar_decoration_id ?? ""} />
             <input type="hidden" name="accent_color" value={profile.accent_color ?? "#ffffff"} />
             <input type="hidden" name="page_background_color" value={profile.page_background_color ?? "#050507"} />
             <input type="hidden" name="panel_background_color" value={profile.panel_background_color ?? "#111113"} />

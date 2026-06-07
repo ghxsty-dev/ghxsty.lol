@@ -1,11 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import { useMemo, useState } from "react";
 import type { IconType } from "react-icons";
 import { Check, Copy, MessageCircle, Send, Share2, X } from "lucide-react";
 import { FaFacebookF, FaLinkedinIn, FaXTwitter } from "react-icons/fa6";
+import { AvatarFrame } from "@/components/profile/avatar-frame";
 import { cn } from "@/lib/utils";
+import type { AvatarDecoration } from "@/types/database";
 
 type ShareTarget = {
   label: string;
@@ -18,11 +19,13 @@ export function ProfileShare({
   username,
   displayName,
   avatarUrl,
+  avatarDecoration,
   accentColor,
 }: {
   username: string;
   displayName: string;
   avatarUrl?: string | null;
+  avatarDecoration?: AvatarDecoration | null;
   accentColor: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -120,21 +123,13 @@ export function ProfileShare({
                   background: `linear-gradient(135deg, ${accentColor}55, rgba(255,255,255,.08))`,
                 }}
               >
-                <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white/20 bg-zinc-900 shadow-xl">
-                  {avatarUrl ? (
-                    <Image
-                      src={avatarUrl}
-                      alt={displayName}
-                      width={112}
-                      height={112}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-4xl font-bold">
-                      {displayName.slice(0, 1).toUpperCase()}
-                    </div>
-                  )}
-                </div>
+                <AvatarFrame
+                  src={avatarUrl}
+                  fallback={displayName}
+                  alt={displayName}
+                  decoration={avatarDecoration}
+                  size="lg"
+                />
                 <h3 className="mt-5 text-2xl font-bold tracking-normal">{displayName}</h3>
                 <p className="text-sm text-white/80">/{username}</p>
               </div>

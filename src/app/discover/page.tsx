@@ -4,9 +4,11 @@ import Link from "next/link";
 import { ArrowUpRight, ThumbsDown, ThumbsUp, Trophy } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
-import type { Profile, ProfileVoteScore } from "@/types/database";
+import { AvatarFrame } from "@/components/profile/avatar-frame";
+import type { AvatarDecoration, Profile, ProfileVoteScore } from "@/types/database";
 
 type DiscoverProfile = Profile & {
+  avatar_decoration?: AvatarDecoration | null;
   score: number;
   upvotes: number;
   downvotes: number;
@@ -20,7 +22,7 @@ export const metadata: Metadata = {
 export default async function DiscoverPage() {
   const supabase = await createClient();
   const [{ data: profiles }, { data: scores }] = await Promise.all([
-    supabase.from("profiles").select("*").limit(100),
+    supabase.from("profiles").select("*, avatar_decoration:avatar_decorations(*)").limit(100),
     supabase.from("profile_vote_scores").select("*"),
   ]);
 
@@ -93,21 +95,13 @@ export default async function DiscoverPage() {
                         <ArrowUpRight className="h-4 w-4 text-zinc-400" />
                       </div>
                       <div className="flex items-center gap-4">
-                        <div className="h-16 w-16 overflow-hidden rounded-full border border-white/10 bg-zinc-900">
-                          {profile.avatar_url ? (
-                            <Image
-                              src={profile.avatar_url}
-                              alt={displayName}
-                              width={64}
-                              height={64}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-xl font-bold">
-                              {displayName.slice(0, 1).toUpperCase()}
-                            </div>
-                          )}
-                        </div>
+                        <AvatarFrame
+                          src={profile.avatar_url}
+                          fallback={displayName}
+                          alt={displayName}
+                          decoration={profile.avatar_decoration}
+                          size="sm"
+                        />
                         <div className="min-w-0">
                           <h2 className="truncate text-lg font-semibold">{displayName}</h2>
                           <p className="truncate text-sm text-zinc-400">@{profile.username}</p>

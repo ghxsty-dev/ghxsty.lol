@@ -72,6 +72,42 @@ body {
   }
 }
 
+@keyframes profile-shine-sweep {
+  0% {
+    transform: translateX(-160%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(360%) skewX(-18deg);
+  }
+}
+
+@keyframes profile-hologram {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 240% 50%;
+  }
+}
+
+@keyframes profile-chromatic {
+  0%, 100% {
+    filter: hue-rotate(0deg) saturate(1.1);
+  }
+  50% {
+    filter: hue-rotate(80deg) saturate(1.8);
+  }
+}
+
+@keyframes profile-plasma {
+  0%, 100% {
+    box-shadow: 0 0 18px color-mix(in srgb, var(--profile-accent), transparent 35%);
+  }
+  50% {
+    box-shadow: 0 0 34px color-mix(in srgb, var(--profile-accent), white 25%);
+  }
+}
+
 .profile-name-glitch {
   text-shadow:
     2px 0 #67e8f9,
@@ -86,4 +122,97 @@ body {
   background-clip: text;
   color: transparent;
   animation: profile-gradient 3.5s linear infinite;
+}
+
+.profile-name-wave {
+  animation: profile-float 2.2s ease-in-out infinite;
+  text-shadow: 0 0 16px var(--profile-accent);
+}
+
+.profile-name-fire {
+  color: #fff;
+  text-shadow:
+    0 0 8px #fff,
+    0 0 16px var(--profile-accent),
+    0 0 28px #fb7185,
+    0 0 44px #f97316;
+  animation: profile-flicker 2.4s linear infinite;
+}
+
+.profile-button-neon {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+    color-mix(in srgb, var(--profile-accent), transparent 88%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--profile-accent), white 30%),
+    0 0 18px color-mix(in srgb, var(--profile-accent), transparent 30%),
+    inset 0 0 16px color-mix(in srgb, var(--profile-accent), transparent 72%);
+}
+
+.profile-button-neon:hover {
+  box-shadow:
+    0 0 0 1px #fff,
+    0 0 28px var(--profile-accent),
+    0 0 54px color-mix(in srgb, var(--profile-accent), white 20%),
+    inset 0 0 22px color-mix(in srgb, var(--profile-accent), transparent 60%);
+}
+
+.profile-button-glow {
+  box-shadow:
+    0 0 24px color-mix(in srgb, var(--profile-accent), transparent 38%),
+    inset 0 0 18px rgba(255, 255, 255, 0.08);
+}
+
+.profile-button-shine::before {
+  content: "";
+  position: absolute;
+  inset-block: -20%;
+  left: 0;
+  width: 34%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.48), transparent);
+  filter: blur(2px);
+  animation: profile-shine-sweep 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.profile-button-hologram {
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0.12),
+    color-mix(in srgb, var(--profile-accent), #22d3ee 40%),
+    rgba(217, 70, 239, 0.28),
+    rgba(255, 255, 255, 0.10)
+  );
+  background-size: 240% 100%;
+  animation: profile-hologram 4s linear infinite;
+}
+
+.profile-button-pulse {
+  animation: profile-pulse 2.2s ease-in-out infinite;
+}
+
+.profile-button-lift:hover {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 20px 42px rgba(0, 0, 0, 0.38);
+}
+
+.profile-button-chromatic {
+  background: linear-gradient(90deg, #fb7185, #a78bfa, #22d3ee, #34d399);
+  animation: profile-chromatic 4s ease-in-out infinite;
+}
+
+.profile-button-plasma {
+  background:
+    radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--profile-accent), white 20%), transparent 34%),
+    radial-gradient(circle at 80% 30%, rgba(34, 211, 238, 0.35), transparent 32%),
+    rgba(255, 255, 255, 0.08);
+  animation: profile-plasma 2.8s ease-in-out infinite;
+}
+
+.profile-button-matrix {
+  background:
+    linear-gradient(180deg, rgba(16, 185, 129, 0.18), rgba(0, 0, 0, 0.2)),
+    repeating-linear-gradient(90deg, rgba(52, 211, 153, 0.16) 0 1px, transparent 1px 10px);
+  color: #bbf7d0;
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.8);
 }

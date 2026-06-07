@@ -7,10 +7,10 @@ import {
   createProfileThemeApplication,
 } from "@/lib/community-theme";
 import { ensureUserProfile } from "@/lib/profile";
-import { deleteR2ObjectByUrl } from "@/lib/r2";
+import { deleteR2ObjectByUrl, uploadR2Object } from "@/lib/r2";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeUsername } from "@/lib/utils";
-import { validateUsername } from "@/lib/validation";
+import { validateImage, validateUsername } from "@/lib/validation";
 import type { CommunityThemeStatus } from "@/types/database";
 
 async function getAdminContext() {
@@ -49,6 +49,13 @@ function getRangeNumber(
   }
 
   return Math.min(max, Math.max(min, value));
+}
+
+function getOptionalUuid(formData: FormData, key: string) {
+  const value = String(formData.get(key) ?? "").trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+    ? value
+    : null;
 }
 
 export async function setCommunityThemeStatusAction(formData: FormData) {
@@ -114,6 +121,7 @@ export async function updateProfileFromAdminAction(formData: FormData) {
     .from("profiles")
     .update({
       username,
+      avatar_decoration_id: getOptionalUuid(formData, "avatar_decoration_id"),
       display_name: String(formData.get("display_name") ?? "").trim(),
       bio: String(formData.get("bio") ?? "").trim(),
       accent_color: getColor(formData, "accent_color", "#ffffff"),
@@ -243,6 +251,118 @@ export async function updateCommunityThemeAction(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/dashboard");
   revalidatePath("/themes");
+}
+
+export async function createAvatarDecorationAction(formData: FormData) {
+  const { supabase, adminProfile } = await getAdminContext();
+  const name = String(formData.get("name") ?? "").trim();
+  const file = formData.get("file");
+
+  if (name.length < 2 || name.length > 40) {
+    return;
+  }
+
+  if (!(file instanceof File) || file.size === 0) {
+    return;
+  }
+
+  const imageError = validateImage(file);
+  if (imageError) {
+    return;
+  }
+
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? "png";
+  const imageUrl = await uploadR2Object({
+    key: `avatar-decorations/${crypto.randomUUID()}.${extension}`,
+    file,
+    contentType: file.type,
+  });
+
+  await supabase.from("avatar_decorations").insert({
+    name,
+    image_url: imageUrl,
+    is_active: formData.get("is_active") === "on",
+    created_by_profile_id: adminProfile.id,
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+}
+
+export async function updateAvatarDecorationAction(formData: FormData) {
+  const { supabase } = await getAdminContext();
+  const decorationId = String(formData.get("decoration_id") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const file = formData.get("file");
+
+  if (name.length < 2 || name.length > 40) {
+    return;
+  }
+
+  const { data: current } = await supabase
+    .from("avatar_decorations")
+    .select("image_url")
+    .eq("id", decorationId)
+    .maybeSingle();
+
+  const updateData: {
+    name: string;
+    is_active: boolean;
+    image_url?: string;
+    updated_at: string;
+  } = {
+    name,
+    is_active: formData.get("is_active") === "on",
+    updated_at: new Date().toISOString(),
+  };
+
+  if (file instanceof File && file.size > 0) {
+    const imageError = validateImage(file);
+    if (imageError) {
+      return;
+    }
+
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "png";
+    updateData.image_url = await uploadR2Object({
+      key: `avatar-decorations/${decorationId}-${Date.now()}.${extension}`,
+      file,
+      contentType: file.type,
+    });
+  }
+
+  await supabase
+    .from("avatar_decorations")
+    .update(updateData)
+    .eq("id", decorationId);
+
+  if (updateData.image_url) {
+    await deleteR2ObjectByUrl(current?.image_url);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+}
+
+export async function deleteAvatarDecorationAction(formData: FormData) {
+  const { supabase } = await getAdminContext();
+  const decorationId = String(formData.get("decoration_id") ?? "");
+
+  const { data: current } = await supabase
+    .from("avatar_decorations")
+    .select("image_url")
+    .eq("id", decorationId)
+    .maybeSingle();
+
+  await supabase
+    .from("profiles")
+    .update({ avatar_decoration_id: null, updated_at: new Date().toISOString() })
+    .eq("avatar_decoration_id", decorationId);
+
+  await supabase.from("avatar_decorations").delete().eq("id", decorationId);
+  await deleteR2ObjectByUrl(current?.image_url);
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
 }
 
 export async function clearCommunityThemeMediaAction(formData: FormData) {

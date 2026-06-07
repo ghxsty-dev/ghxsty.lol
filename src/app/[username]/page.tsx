@@ -13,7 +13,7 @@ async function getProfile(username: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("*, profile_links(*)")
+    .select("*, profile_links(*), avatar_decoration:avatar_decorations(*)")
     .eq("username", username)
     .order("position", {
       referencedTable: "profile_links",
@@ -88,12 +88,20 @@ export default async function PublicProfilePage({ params }: PageProps) {
           .maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
+  const { data: updatedViewCount } = await supabase.rpc("increment_profile_view", {
+    target_profile_id: profile.id,
+  });
 
   return (
     <ProfileView
       profile={profile}
       voteScore={(score as ProfileVoteScore | null) ?? null}
       currentVote={(currentVote?.value as 1 | -1 | undefined) ?? null}
+      viewCount={
+        typeof updatedViewCount === "number"
+          ? updatedViewCount
+          : (profile.view_count ?? 0)
+      }
     />
   );
 }
