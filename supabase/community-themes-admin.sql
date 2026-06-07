@@ -37,6 +37,7 @@ create table if not exists public.community_themes (
   background_style text default 'soft',
   button_style text default 'glass',
   font_style text default 'clean',
+  display_name_effect text default 'none',
   approved_by_profile_id uuid references public.profiles(id) on delete set null,
   approved_at timestamptz,
   created_at timestamptz not null default now(),

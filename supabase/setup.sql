@@ -57,6 +57,7 @@ create table if not exists public.profiles (
   background_style text default 'soft',
   button_style text default 'glass',
   font_style text default 'clean',
+  display_name_effect text default 'none',
   theme public.profile_theme not null default 'dark',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -120,6 +121,7 @@ create table if not exists public.community_themes (
   background_style text default 'soft',
   button_style text default 'glass',
   font_style text default 'clean',
+  display_name_effect text default 'none',
   approved_by_profile_id uuid references public.profiles(id) on delete set null,
   approved_at timestamptz,
   created_at timestamptz not null default now(),
@@ -399,6 +401,7 @@ alter table public.profiles add column if not exists button_radius integer defau
 alter table public.profiles add column if not exists background_style text default 'soft';
 alter table public.profiles add column if not exists button_style text default 'glass';
 alter table public.profiles add column if not exists font_style text default 'clean';
+alter table public.profiles add column if not exists display_name_effect text default 'none';
 
 insert into public.profiles (user_id, username, display_name, theme)
 select

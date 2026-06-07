@@ -32,6 +32,7 @@ alter table public.profiles add column if not exists button_radius integer defau
 alter table public.profiles add column if not exists background_style text default 'soft';
 alter table public.profiles add column if not exists button_style text default 'glass';
 alter table public.profiles add column if not exists font_style text default 'clean';
+alter table public.profiles add column if not exists display_name_effect text default 'none';
 
 create unique index if not exists profiles_discord_id_unique
   on public.profiles(discord_id)
@@ -66,6 +67,7 @@ set
   button_radius = coalesce(button_radius, 6),
   background_style = coalesce(background_style, 'soft'),
   button_style = coalesce(button_style, 'glass'),
-  font_style = coalesce(font_style, 'clean');
+  font_style = coalesce(font_style, 'clean'),
+  display_name_effect = coalesce(display_name_effect, 'none');
 
 notify pgrst, 'reload schema';
