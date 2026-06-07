@@ -10,8 +10,13 @@ import { ensureUserProfile } from "@/lib/profile";
 import { deleteR2ObjectByUrl, uploadR2Object } from "@/lib/r2";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeUsername } from "@/lib/utils";
-import { validateImage, validateUsername } from "@/lib/validation";
-import type { CommunityThemeStatus } from "@/types/database";
+import {
+  getAudioContentType,
+  validateAudio,
+  validateImage,
+  validateUsername,
+} from "@/lib/validation";
+import type { CommunityThemeStatus, ProfileTheme } from "@/types/database";
 
 async function getAdminContext() {
   const supabase = await createClient();
@@ -56,6 +61,136 @@ function getOptionalUuid(formData: FormData, key: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
     ? value
     : null;
+}
+
+function getText(formData: FormData, key: string, fallback = "") {
+  return String(formData.get(key) ?? fallback).trim();
+}
+
+function getSelectValue(formData: FormData, key: string, fallback: string, allowed: string[]) {
+  const value = getText(formData, key, fallback);
+  return allowed.includes(value) ? value : fallback;
+}
+
+function getThemeVisualPayload(formData: FormData) {
+  return {
+    theme: getSelectValue(formData, "theme", "dark", [
+      "dark",
+      "light",
+      "midnight",
+      "cyberpunk",
+      "anime",
+      "glass",
+    ]) as ProfileTheme,
+    accent_color: getColor(formData, "accent_color", "#ffffff"),
+    page_background_color: getColor(formData, "page_background_color", "#050507"),
+    panel_background_color: getColor(formData, "panel_background_color", "#111113"),
+    text_color: getColor(formData, "text_color", "#ffffff"),
+    muted_text_color: getColor(formData, "muted_text_color", "#d4d4d8"),
+    button_background_color: getColor(formData, "button_background_color", "#ffffff"),
+    button_text_color: getColor(formData, "button_text_color", "#ffffff"),
+    header_enabled: formData.get("header_enabled") === "on",
+    header_background_style: getSelectValue(formData, "header_background_style", "gradient", [
+      "gradient",
+      "solid",
+    ]),
+    header_color: getColor(formData, "header_color", "#74d9bf"),
+    header_color_to: getColor(formData, "header_color_to", "#2f9d8f"),
+    panel_visible: formData.get("panel_visible") === "on",
+    links_icon_only: formData.get("links_icon_only") === "on",
+    music_show_volume: formData.get("music_show_volume") === "on",
+    music_volume_position: getSelectValue(formData, "music_volume_position", "top-right", [
+      "top-right",
+      "top-left",
+      "bottom-right",
+      "bottom-left",
+    ]),
+    background_blur: getRangeNumber(formData, "background_blur", 10, 0, 40),
+    panel_opacity: getRangeNumber(formData, "panel_opacity", 70, 10, 100),
+    button_opacity: getRangeNumber(formData, "button_opacity", 12, 0, 100),
+    panel_radius: getRangeNumber(formData, "panel_radius", 8, 0, 32),
+    button_radius: getRangeNumber(formData, "button_radius", 6, 0, 32),
+    background_style: getSelectValue(formData, "background_style", "soft", [
+      "soft",
+      "grid",
+      "spotlight",
+      "minimal",
+      "aurora",
+      "scanlines",
+      "vignette",
+      "noise",
+      "rings",
+    ]),
+    button_style: getSelectValue(formData, "button_style", "glass", [
+      "glass",
+      "solid",
+      "outline",
+      "neon",
+      "glow",
+      "shine",
+      "hologram",
+      "pulse",
+      "lift",
+      "chromatic",
+      "plasma",
+      "matrix",
+    ]),
+    font_style: getSelectValue(formData, "font_style", "clean", [
+      "clean",
+      "display",
+      "rounded",
+      "condensed",
+      "elegant",
+      "wide",
+      "bold",
+      "mono",
+      "serif",
+      "cyber",
+      "pixel",
+      "script",
+      "editorial",
+      "terminal",
+      "impact",
+      "soft-serif",
+    ]),
+    display_name_effect: getSelectValue(formData, "display_name_effect", "none", [
+      "none",
+      "gradient-shift",
+      "neon-flicker",
+      "glitch",
+      "float",
+      "shine",
+      "pulse",
+      "wave",
+      "fire",
+    ]),
+  };
+}
+
+async function uploadOptionalThemeMedia({
+  file,
+  key,
+  kind,
+}: {
+  file: FormDataEntryValue | null;
+  key: string;
+  kind: "image" | "audio";
+}) {
+  if (!(file instanceof File) || file.size === 0) {
+    return null;
+  }
+
+  const error = kind === "image" ? validateImage(file) : validateAudio(file);
+  if (error) {
+    throw new Error(error);
+  }
+
+  const extension = file.name.split(".").pop()?.toLowerCase() ?? (kind === "image" ? "png" : "mp3");
+  return uploadR2Object({
+    key: `${key}.${extension}`,
+    file,
+    contentType: kind === "image" ? file.type : getAudioContentType(file),
+  });
 }
 
 export async function setCommunityThemeStatusAction(formData: FormData) {
@@ -171,6 +306,63 @@ export async function cloneProfileAsCommunityThemeAction(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
+}
+
+export async function createCommunityThemeFromAdminAction(formData: FormData) {
+  const { supabase, adminProfile } = await getAdminContext();
+  const name = getText(formData, "name");
+  const description = getText(formData, "description");
+
+  if (name.length < 3 || name.length > 40) {
+    return;
+  }
+
+  const seed = crypto.randomUUID();
+  let bannerUrl: string | null = null;
+  let musicUrl: string | null = null;
+
+  try {
+    bannerUrl = await uploadOptionalThemeMedia({
+      file: formData.get("banner_file"),
+      key: `community-themes/admin/${seed}/background`,
+      kind: "image",
+    });
+    musicUrl = await uploadOptionalThemeMedia({
+      file: formData.get("music_file"),
+      key: `community-themes/admin/${seed}/music`,
+      kind: "audio",
+    });
+  } catch {
+    if (bannerUrl) {
+      await deleteR2ObjectByUrl(bannerUrl);
+    }
+    return;
+  }
+
+  const { error } = await supabase.from("community_themes").insert({
+    author_profile_id: adminProfile.id,
+    name,
+    description: description || "Admin tarafından oluşturuldu.",
+    status: "approved",
+    approved_by_profile_id: adminProfile.id,
+    approved_at: new Date().toISOString(),
+    banner_url: bannerUrl,
+    music_url: musicUrl,
+    music_title: getText(formData, "music_title") || null,
+    ...getThemeVisualPayload(formData),
+  });
+
+  if (error) {
+    await Promise.all([
+      deleteR2ObjectByUrl(bannerUrl),
+      deleteR2ObjectByUrl(musicUrl),
+    ]);
+    return;
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/themes");
 }
 
 export async function applyCommunityThemeToProfileAction(formData: FormData) {

@@ -8,6 +8,7 @@ import {
   clearCommunityThemeMediaAction,
   cloneProfileAsCommunityThemeAction,
   createAvatarDecorationAction,
+  createCommunityThemeFromAdminAction,
   deleteAvatarDecorationAction,
   deleteCommunityThemeAction,
   setCommunityThemeStatusAction,
@@ -85,6 +86,221 @@ export default async function AdminPage() {
             @{adminProfile.username} olarak yönetiyorsun.
           </p>
         </header>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Admin Tema Oluştur</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form action={createCommunityThemeFromAdminAction} className="space-y-4">
+              <div className="grid gap-4 lg:grid-cols-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-name">Tema adı</Label>
+                  <Input id="admin-theme-name" name="name" placeholder="Neon gece" required />
+                </div>
+                <div className="space-y-2 lg:col-span-3">
+                  <Label htmlFor="admin-theme-description">Açıklama</Label>
+                  <Input id="admin-theme-description" name="description" placeholder="Kısa tema açıklaması" />
+                </div>
+              </div>
+
+              <div className="grid gap-4 rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:grid-cols-3">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-banner">Arka plan görseli</Label>
+                  <Input id="admin-theme-banner" name="banner_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-music">Tema şarkısı</Label>
+                  <Input id="admin-theme-music" name="music_file" type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/mp4,audio/x-m4a" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-music-title">Şarkı adı</Label>
+                  <Input id="admin-theme-music-title" name="music_title" placeholder="Profil şarkısı" />
+                </div>
+              </div>
+
+              <div className="grid gap-4 rounded-lg border border-white/10 bg-white/[0.035] p-4 sm:grid-cols-2 lg:grid-cols-5">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-accent">Vurgu</Label>
+                  <Input id="admin-theme-accent" name="accent_color" type="color" defaultValue="#ffffff" className="h-10 w-16 p-1" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-page">Sayfa</Label>
+                  <Input id="admin-theme-page" name="page_background_color" type="color" defaultValue="#050507" className="h-10 w-16 p-1" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-panel">Panel</Label>
+                  <Input id="admin-theme-panel" name="panel_background_color" type="color" defaultValue="#111113" className="h-10 w-16 p-1" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-text">Ana yazı</Label>
+                  <Input id="admin-theme-text" name="text_color" type="color" defaultValue="#ffffff" className="h-10 w-16 p-1" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-muted">İkincil yazı</Label>
+                  <Input id="admin-theme-muted" name="muted_text_color" type="color" defaultValue="#d4d4d8" className="h-10 w-16 p-1" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-button-bg">Link bg</Label>
+                  <Input id="admin-theme-button-bg" name="button_background_color" type="color" defaultValue="#ffffff" className="h-10 w-16 p-1" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-button-text">Link yazı</Label>
+                  <Input id="admin-theme-button-text" name="button_text_color" type="color" defaultValue="#ffffff" className="h-10 w-16 p-1" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-header">Üst renk</Label>
+                  <Input id="admin-theme-header" name="header_color" type="color" defaultValue="#74d9bf" className="h-10 w-16 p-1" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-header-to">Üst gradyan</Label>
+                  <Input id="admin-theme-header-to" name="header_color_to" type="color" defaultValue="#2f9d8f" className="h-10 w-16 p-1" />
+                </div>
+              </div>
+
+              <div className="grid gap-4 rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:grid-cols-4">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-base">Tema tabanı</Label>
+                  <select id="admin-theme-base" name="theme" defaultValue="dark" className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none">
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                    <option value="midnight">Midnight</option>
+                    <option value="cyberpunk">Cyberpunk</option>
+                    <option value="anime">Anime</option>
+                    <option value="glass">Glass</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-bg-style">Arka plan efekti</Label>
+                  <select id="admin-theme-bg-style" name="background_style" defaultValue="soft" className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none">
+                    <option value="soft">Soft glass</option>
+                    <option value="grid">Grid</option>
+                    <option value="spotlight">Spotlight</option>
+                    <option value="minimal">Minimal</option>
+                    <option value="aurora">Aurora</option>
+                    <option value="scanlines">Scanlines</option>
+                    <option value="vignette">Vignette</option>
+                    <option value="noise">Noise</option>
+                    <option value="rings">Rings</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-header-style">Üst renk alanı</Label>
+                  <select id="admin-theme-header-style" name="header_background_style" defaultValue="gradient" className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none">
+                    <option value="gradient">Gradyan</option>
+                    <option value="solid">Tek renk</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-volume-position">Ses konumu</Label>
+                  <select id="admin-theme-volume-position" name="music_volume_position" defaultValue="top-right" className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none">
+                    <option value="top-right">Sağ üst</option>
+                    <option value="top-left">Sol üst</option>
+                    <option value="bottom-right">Sağ alt</option>
+                    <option value="bottom-left">Sol alt</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-button-style">Link efekti</Label>
+                  <select id="admin-theme-button-style" name="button_style" defaultValue="glass" className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none">
+                    <option value="glass">Glass</option>
+                    <option value="solid">Solid</option>
+                    <option value="outline">Outline</option>
+                    <option value="neon">Neon</option>
+                    <option value="glow">Glow</option>
+                    <option value="shine">Shine</option>
+                    <option value="hologram">Hologram</option>
+                    <option value="pulse">Pulse</option>
+                    <option value="lift">Lift</option>
+                    <option value="chromatic">Chromatic</option>
+                    <option value="plasma">Plasma</option>
+                    <option value="matrix">Matrix</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-font">Yazı stili</Label>
+                  <select id="admin-theme-font" name="font_style" defaultValue="clean" className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none">
+                    <option value="clean">Clean</option>
+                    <option value="display">Display</option>
+                    <option value="rounded">Rounded</option>
+                    <option value="condensed">Condensed</option>
+                    <option value="elegant">Elegant</option>
+                    <option value="wide">Wide</option>
+                    <option value="bold">Bold</option>
+                    <option value="mono">Mono</option>
+                    <option value="serif">Serif</option>
+                    <option value="cyber">Cyber</option>
+                    <option value="pixel">Pixel</option>
+                    <option value="script">Script</option>
+                    <option value="editorial">Editorial</option>
+                    <option value="terminal">Terminal</option>
+                    <option value="impact">Impact</option>
+                    <option value="soft-serif">Soft serif</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-name-effect">İsim efekti</Label>
+                  <select id="admin-theme-name-effect" name="display_name_effect" defaultValue="none" className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none">
+                    <option value="none">Sade</option>
+                    <option value="gradient-shift">Gradient shift</option>
+                    <option value="neon-flicker">Neon flicker</option>
+                    <option value="glitch">Glitch</option>
+                    <option value="float">Float</option>
+                    <option value="shine">Shine</option>
+                    <option value="pulse">Pulse</option>
+                    <option value="wave">Wave</option>
+                    <option value="fire">Fire</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid gap-4 rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:grid-cols-5">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-blur">Blur</Label>
+                  <Input id="admin-theme-blur" name="background_blur" type="range" min="0" max="40" defaultValue="10" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-panel-opacity">Panel opaklık</Label>
+                  <Input id="admin-theme-panel-opacity" name="panel_opacity" type="range" min="10" max="100" defaultValue="70" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-button-opacity">Link opaklık</Label>
+                  <Input id="admin-theme-button-opacity" name="button_opacity" type="range" min="0" max="100" defaultValue="12" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-panel-radius">Panel köşe</Label>
+                  <Input id="admin-theme-panel-radius" name="panel_radius" type="range" min="0" max="32" defaultValue="8" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-theme-button-radius">Link köşe</Label>
+                  <Input id="admin-theme-button-radius" name="button_radius" type="range" min="0" max="32" defaultValue="6" />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.035] p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap gap-4 text-sm text-zinc-300">
+                  <label className="flex items-center gap-2">
+                    <input name="header_enabled" type="checkbox" defaultChecked className="h-4 w-4 accent-white" />
+                    Üst alan
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input name="panel_visible" type="checkbox" defaultChecked className="h-4 w-4 accent-white" />
+                    Panel
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input name="links_icon_only" type="checkbox" className="h-4 w-4 accent-white" />
+                    Sadece ikon
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input name="music_show_volume" type="checkbox" defaultChecked className="h-4 w-4 accent-white" />
+                    Ses kontrolü
+                  </label>
+                </div>
+                <Button type="submit">Onaylı tema oluştur</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
