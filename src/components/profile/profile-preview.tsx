@@ -134,8 +134,10 @@ export function ProfilePreview({
 
             <div
               className={cn(
-                "relative mt-5 grid",
-                linksIconOnly ? "grid-cols-6 gap-1" : "grid-cols-2 gap-2",
+                "relative mt-5",
+                linksIconOnly
+                  ? "flex flex-wrap items-center justify-center gap-3"
+                  : "grid grid-cols-2 gap-2",
               )}
             >
               {shownLinks.map((link) => {
@@ -144,14 +146,16 @@ export function ProfilePreview({
                   <div
                     key={link.id}
                     className={cn(
-                      "flex min-w-0 items-center rounded-md border text-xs",
+                      "flex min-w-0 items-center text-xs",
                       linksIconOnly
-                        ? "mx-auto h-8 w-8 justify-center p-0"
-                        : "h-10 gap-2 px-3",
+                        ? "justify-center p-1"
+                        : "h-10 gap-2 rounded-md border px-3",
                     )}
                     style={{
                       backgroundColor:
-                        profile.button_style === "outline"
+                        linksIconOnly
+                          ? "transparent"
+                          : profile.button_style === "outline"
                           ? "transparent"
                           : withAlpha(
                               profile.button_background_color,
@@ -159,13 +163,15 @@ export function ProfilePreview({
                             ),
                       color: profile.button_text_color ?? "#ffffff",
                       borderColor:
-                        profile.button_style === "outline" ||
-                        profile.button_style === "neon"
-                          ? (profile.accent_color ?? "#ffffff")
-                          : `${profile.button_background_color ?? "#ffffff"}55`,
+                        linksIconOnly
+                          ? "transparent"
+                          : profile.button_style === "outline" ||
+                              profile.button_style === "neon"
+                            ? (profile.accent_color ?? "#ffffff")
+                            : `${profile.button_background_color ?? "#ffffff"}55`,
                     }}
                   >
-                    <Icon className={cn("shrink-0", linksIconOnly ? "h-4 w-4" : "h-3.5 w-3.5")} />
+                    <Icon className={cn("shrink-0", linksIconOnly ? "h-5 w-5" : "h-3.5 w-3.5")} />
                     {linksIconOnly ? null : (
                       <span className="truncate">{link.title}</span>
                     )}
