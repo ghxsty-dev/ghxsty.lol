@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ensureUserProfile } from "@/lib/profile";
+import { deleteR2ObjectByUrl, uploadR2Object } from "@/lib/r2";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeUsername } from "@/lib/utils";
 import {
@@ -71,7 +72,7 @@ function getCheckbox(formData: FormData, key: string) {
   return formData.get(key) === "on";
 }
 
-function getStoragePathFromPublicUrl(url?: string | null) {
+function getSupabaseStoragePathFromPublicUrl(url?: string | null) {
   if (!url) {
     return null;
   }
@@ -93,16 +94,26 @@ function getStoragePathFromPublicUrl(url?: string | null) {
   }
 }
 
-async function removeOldProfileMedia(
+async function deleteProfileMediaQuietly(
   supabase: Awaited<ReturnType<typeof createClient>>,
   url?: string | null,
 ) {
-  const oldPath = getStoragePathFromPublicUrl(url);
-  if (!oldPath) {
+  try {
+    await deleteR2ObjectByUrl(url);
+  } catch {
+    // A stale R2 object should not block the profile update the user just made.
+  }
+
+  const supabasePath = getSupabaseStoragePathFromPublicUrl(url);
+  if (!supabasePath) {
     return;
   }
 
-  await supabase.storage.from("profile-media").remove([oldPath]);
+  try {
+    await supabase.storage.from("profile-media").remove([supabasePath]);
+  } catch {
+    // Legacy Supabase Storage cleanup is best-effort during the R2 migration.
+  }
 }
 
 export async function updateProfileAction(
@@ -200,21 +211,23 @@ export async function uploadImageAction(
   }
 
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "png";
-  const path = `${profile.user_id}/${field}-${Date.now()}.${extension}`;
-  const { error: uploadError } = await supabase.storage
-    .from("profile-media")
-    .upload(path, file, {
+  const path = `${profile.user_id}/images/${field}-${Date.now()}.${extension}`;
+  let publicUrl: string;
+
+  try {
+    publicUrl = await uploadR2Object({
+      key: path,
+      file,
       contentType: file.type,
-      upsert: true,
     });
-
-  if (uploadError) {
-    return { error: "Görsel yüklenemedi." };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error
+          ? `Görsel yüklenemedi: ${error.message}`
+          : "Görsel yüklenemedi.",
+    };
   }
-
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("profile-media").getPublicUrl(path);
 
   const { error } = await supabase
     .from("profiles")
@@ -222,10 +235,11 @@ export async function uploadImageAction(
     .eq("id", profile.id);
 
   if (error) {
+    await deleteProfileMediaQuietly(supabase, publicUrl);
     return { error: "Profil görseli kaydedilemedi." };
   }
 
-  await removeOldProfileMedia(supabase, profile[field]);
+  await deleteProfileMediaQuietly(supabase, profile[field]);
 
   revalidatePath("/dashboard");
   revalidatePath(`/${profile.username}`);
@@ -250,24 +264,24 @@ export async function uploadMusicAction(
   }
 
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "mp3";
-  const path = `${profile.user_id}/music-${Date.now()}.${extension}`;
+  const path = `${profile.user_id}/music/music-${Date.now()}.${extension}`;
   const contentType = getAudioContentType(file);
-  const { error: uploadError } = await supabase.storage
-    .from("profile-media")
-    .upload(path, file, {
-      contentType,
-      upsert: true,
-    });
+  let publicUrl: string;
 
-  if (uploadError) {
+  try {
+    publicUrl = await uploadR2Object({
+      key: path,
+      file,
+      contentType,
+    });
+  } catch (error) {
     return {
-      error: `Şarkı yüklenemedi: ${uploadError.message}. Storage MIME ayarlarını kontrol et.`,
+      error:
+        error instanceof Error
+          ? `Şarkı yüklenemedi: ${error.message}`
+          : "Şarkı yüklenemedi.",
     };
   }
-
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from("profile-media").getPublicUrl(path);
 
   const { error } = await supabase
     .from("profiles")
@@ -279,10 +293,11 @@ export async function uploadMusicAction(
     .eq("id", profile.id);
 
   if (error) {
+    await deleteProfileMediaQuietly(supabase, publicUrl);
     return { error: "Şarkı profile kaydedilemedi." };
   }
 
-  await removeOldProfileMedia(supabase, profile.music_url);
+  await deleteProfileMediaQuietly(supabase, profile.music_url);
 
   revalidatePath("/dashboard");
   revalidatePath(`/${profile.username}`);
@@ -301,7 +316,7 @@ export async function removeMusicAction(): Promise<void> {
     })
     .eq("id", profile.id);
 
-  await removeOldProfileMedia(supabase, profile.music_url);
+  await deleteProfileMediaQuietly(supabase, profile.music_url);
 
   revalidatePath("/dashboard");
   revalidatePath(`/${profile.username}`);
