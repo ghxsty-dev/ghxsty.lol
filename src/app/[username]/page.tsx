@@ -13,7 +13,7 @@ async function getProfile(username: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("*, profile_links(*), avatar_decoration:avatar_decorations(*)")
+    .select("*, profile_links(*), avatar_decoration:avatar_decorations!profiles_avatar_decoration_id_fkey(*)")
     .eq("username", username)
     .order("position", {
       referencedTable: "profile_links",

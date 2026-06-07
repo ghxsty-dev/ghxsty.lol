@@ -22,7 +22,10 @@ export const metadata: Metadata = {
 export default async function DiscoverPage() {
   const supabase = await createClient();
   const [{ data: profiles }, { data: scores }] = await Promise.all([
-    supabase.from("profiles").select("*, avatar_decoration:avatar_decorations(*)").limit(100),
+    supabase
+      .from("profiles")
+      .select("*, avatar_decoration:avatar_decorations!profiles_avatar_decoration_id_fkey(*)")
+      .limit(100),
     supabase.from("profile_vote_scores").select("*"),
   ]);
 
