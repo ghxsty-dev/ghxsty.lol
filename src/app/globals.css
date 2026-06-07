@@ -24,3 +24,66 @@ body {
 ::selection {
   background: rgba(255, 255, 255, 0.18);
 }
+
+@keyframes profile-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 300% 50%;
+  }
+}
+
+@keyframes profile-flicker {
+  0%, 19%, 21%, 23%, 80%, 100% {
+    opacity: 1;
+  }
+  20%, 22%, 81% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes profile-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes profile-name-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 0 var(--profile-accent));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 18px var(--profile-accent));
+    transform: scale(1.035);
+  }
+}
+
+@keyframes profile-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 30px var(--profile-accent);
+  }
+}
+
+.profile-name-glitch {
+  text-shadow:
+    2px 0 #67e8f9,
+    -2px 0 #f472b6,
+    0 0 18px var(--profile-accent);
+  animation: profile-flicker 2.6s linear infinite;
+}
+
+.profile-name-shine {
+  background: linear-gradient(100deg, #fff 0%, var(--profile-accent) 42%, #fff 55%, var(--profile-accent) 100%);
+  background-size: 240% 100%;
+  background-clip: text;
+  color: transparent;
+  animation: profile-gradient 3.5s linear infinite;
+}

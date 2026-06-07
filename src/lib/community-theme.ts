@@ -1,4 +1,5 @@
 import type { CommunityTheme, Profile, ProfileTheme } from "@/types/database";
+import { copyR2ObjectByUrl } from "@/lib/r2";
 
 export const COMMUNITY_THEME_FIELDS = [
   "banner_url",
@@ -28,14 +29,44 @@ export const COMMUNITY_THEME_FIELDS = [
   "background_style",
   "button_style",
   "font_style",
+  "display_name_effect",
 ] as const;
 
 export type CommunityThemeField = (typeof COMMUNITY_THEME_FIELDS)[number];
 
-export function createCommunityThemeSnapshot(profile: Profile) {
+function getExtensionFromUrl(url?: string | null, fallback = "bin") {
+  if (!url) {
+    return fallback;
+  }
+
+  try {
+    const path = new URL(url).pathname;
+    return path.split(".").pop()?.toLowerCase() || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export async function createCommunityThemeSnapshot(
+  profile: Profile,
+  seed = crypto.randomUUID(),
+) {
+  const bannerUrl = profile.banner_url
+    ? await copyR2ObjectByUrl({
+        sourceUrl: profile.banner_url,
+        destinationKey: `community-themes/${seed}/background.${getExtensionFromUrl(profile.banner_url, "png")}`,
+      })
+    : null;
+  const musicUrl = profile.music_url
+    ? await copyR2ObjectByUrl({
+        sourceUrl: profile.music_url,
+        destinationKey: `community-themes/${seed}/music.${getExtensionFromUrl(profile.music_url, "mp3")}`,
+      })
+    : null;
+
   return {
-    banner_url: profile.banner_url,
-    music_url: profile.music_url,
+    banner_url: bannerUrl,
+    music_url: musicUrl,
     music_title: profile.music_title,
     music_show_volume: profile.music_show_volume ?? true,
     music_volume_position: profile.music_volume_position ?? "top-right",
@@ -61,6 +92,7 @@ export function createCommunityThemeSnapshot(profile: Profile) {
     background_style: profile.background_style ?? "soft",
     button_style: profile.button_style ?? "glass",
     font_style: profile.font_style ?? "clean",
+    display_name_effect: profile.display_name_effect ?? "none",
   };
 }
 
@@ -93,6 +125,32 @@ export function getCommunityThemeUpdate(theme: CommunityTheme) {
     background_style: theme.background_style ?? "soft",
     button_style: theme.button_style ?? "glass",
     font_style: theme.font_style ?? "clean",
+    display_name_effect: theme.display_name_effect ?? "none",
     updated_at: new Date().toISOString(),
+  };
+}
+
+export async function createProfileThemeApplication(
+  theme: CommunityTheme,
+  profile: Pick<Profile, "user_id">,
+) {
+  const seed = crypto.randomUUID();
+  const bannerUrl = theme.banner_url
+    ? await copyR2ObjectByUrl({
+        sourceUrl: theme.banner_url,
+        destinationKey: `${profile.user_id}/theme-applied/${seed}/background.${getExtensionFromUrl(theme.banner_url, "png")}`,
+      })
+    : null;
+  const musicUrl = theme.music_url
+    ? await copyR2ObjectByUrl({
+        sourceUrl: theme.music_url,
+        destinationKey: `${profile.user_id}/theme-applied/${seed}/music.${getExtensionFromUrl(theme.music_url, "mp3")}`,
+      })
+    : null;
+
+  return {
+    ...getCommunityThemeUpdate(theme),
+    banner_url: bannerUrl,
+    music_url: musicUrl,
   };
 }

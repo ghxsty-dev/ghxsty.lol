@@ -4,10 +4,12 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, ExternalLink, ShieldCheck, Trash2 } from "lucide-react";
 import {
   applyCommunityThemeToProfileAction,
+  clearCommunityThemeMediaAction,
   cloneProfileAsCommunityThemeAction,
   deleteCommunityThemeAction,
   setCommunityThemeStatusAction,
   setProfileAdminAction,
+  updateCommunityThemeAction,
   updateProfileFromAdminAction,
 } from "@/app/admin/actions";
 import { Button } from "@/components/ui/button";
@@ -52,6 +54,7 @@ export default async function AdminPage() {
     .select("*, author:profiles!community_themes_author_profile_id_fkey(username, display_name, avatar_url)")
     .order("created_at", { ascending: false });
   const themes = (rawThemes ?? []) as CommunityThemeWithAuthor[];
+  const pendingThemes = themes.filter((theme) => theme.status === "pending");
   const approvedThemes = themes.filter((theme) => theme.status === "approved");
 
   return (
@@ -79,8 +82,8 @@ export default async function AdminPage() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 lg:grid-cols-2">
-              {themes.length ? (
-                themes.map((theme) => (
+              {pendingThemes.length ? (
+                pendingThemes.map((theme) => (
                   <article
                     key={theme.id}
                     className="rounded-lg border border-white/10 bg-white/[0.04] p-4"
@@ -129,7 +132,172 @@ export default async function AdminPage() {
                 ))
               ) : (
                 <p className="rounded-lg border border-white/10 bg-white/[0.04] p-4 text-sm text-zinc-400 lg:col-span-2">
-                  Henüz gönderilmiş tema yok.
+                  Bekleyen tema yok.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Tema Düzenleme</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {themes.length ? (
+                themes.map((theme) => (
+                  <article
+                    key={theme.id}
+                    className="rounded-lg border border-white/10 bg-white/[0.04] p-4"
+                  >
+                    <form action={updateCommunityThemeAction} className="grid gap-4 lg:grid-cols-4">
+                      <input type="hidden" name="theme_id" value={theme.id} />
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-name-${theme.id}`}>Tema adı</Label>
+                        <Input id={`theme-name-${theme.id}`} name="name" defaultValue={theme.name} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-status-${theme.id}`}>Durum</Label>
+                        <select
+                          id={`theme-status-${theme.id}`}
+                          name="status"
+                          defaultValue={theme.status}
+                          className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none"
+                        >
+                          <option value="pending">Bekliyor</option>
+                          <option value="approved">Onaylı</option>
+                          <option value="rejected">Reddedildi</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2 lg:col-span-2">
+                        <Label htmlFor={`theme-description-${theme.id}`}>Açıklama</Label>
+                        <Textarea id={`theme-description-${theme.id}`} name="description" defaultValue={theme.description ?? ""} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-accent-${theme.id}`}>Vurgu</Label>
+                        <Input id={`theme-accent-${theme.id}`} name="accent_color" type="color" defaultValue={theme.accent_color ?? "#ffffff"} className="h-10 w-16 p-1" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-page-${theme.id}`}>Sayfa</Label>
+                        <Input id={`theme-page-${theme.id}`} name="page_background_color" type="color" defaultValue={theme.page_background_color ?? "#050507"} className="h-10 w-16 p-1" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-panel-${theme.id}`}>Panel</Label>
+                        <Input id={`theme-panel-${theme.id}`} name="panel_background_color" type="color" defaultValue={theme.panel_background_color ?? "#111113"} className="h-10 w-16 p-1" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-button-bg-${theme.id}`}>Link bg</Label>
+                        <Input id={`theme-button-bg-${theme.id}`} name="button_background_color" type="color" defaultValue={theme.button_background_color ?? "#ffffff"} className="h-10 w-16 p-1" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-button-text-${theme.id}`}>Link yazı</Label>
+                        <Input id={`theme-button-text-${theme.id}`} name="button_text_color" type="color" defaultValue={theme.button_text_color ?? "#ffffff"} className="h-10 w-16 p-1" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-header-${theme.id}`}>Üst renk</Label>
+                        <Input id={`theme-header-${theme.id}`} name="header_color" type="color" defaultValue={theme.header_color ?? "#74d9bf"} className="h-10 w-16 p-1" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-header-to-${theme.id}`}>Üst gradyan</Label>
+                        <Input id={`theme-header-to-${theme.id}`} name="header_color_to" type="color" defaultValue={theme.header_color_to ?? "#2f9d8f"} className="h-10 w-16 p-1" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-bg-style-${theme.id}`}>Arka plan efekti</Label>
+                        <select id={`theme-bg-style-${theme.id}`} name="background_style" defaultValue={theme.background_style ?? "soft"} className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none">
+                          <option value="soft">Soft glass</option>
+                          <option value="grid">Grid</option>
+                          <option value="spotlight">Spotlight</option>
+                          <option value="minimal">Minimal</option>
+                          <option value="aurora">Aurora</option>
+                          <option value="scanlines">Scanlines</option>
+                          <option value="vignette">Vignette</option>
+                          <option value="noise">Noise</option>
+                          <option value="rings">Rings</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-button-style-${theme.id}`}>Link efekti</Label>
+                        <select id={`theme-button-style-${theme.id}`} name="button_style" defaultValue={theme.button_style ?? "glass"} className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none">
+                          <option value="glass">Glass</option>
+                          <option value="solid">Solid</option>
+                          <option value="outline">Outline</option>
+                          <option value="neon">Neon</option>
+                          <option value="glow">Glow</option>
+                          <option value="shine">Shine</option>
+                          <option value="hologram">Hologram</option>
+                          <option value="pulse">Pulse</option>
+                          <option value="lift">Lift</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-font-${theme.id}`}>Yazı stili</Label>
+                        <select id={`theme-font-${theme.id}`} name="font_style" defaultValue={theme.font_style ?? "clean"} className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none">
+                          <option value="clean">Clean</option>
+                          <option value="cyber">Cyber</option>
+                          <option value="pixel">Pixel</option>
+                          <option value="script">Script</option>
+                          <option value="editorial">Editorial</option>
+                          <option value="terminal">Terminal</option>
+                          <option value="impact">Impact</option>
+                          <option value="soft-serif">Soft serif</option>
+                          <option value="mono">Mono</option>
+                          <option value="serif">Serif</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-name-effect-${theme.id}`}>İsim efekti</Label>
+                        <select id={`theme-name-effect-${theme.id}`} name="display_name_effect" defaultValue={theme.display_name_effect ?? "none"} className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none">
+                          <option value="none">Sade</option>
+                          <option value="gradient-shift">Gradient shift</option>
+                          <option value="neon-flicker">Neon flicker</option>
+                          <option value="glitch">Glitch</option>
+                          <option value="float">Float</option>
+                          <option value="shine">Shine</option>
+                          <option value="pulse">Pulse</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-blur-${theme.id}`}>Blur</Label>
+                        <Input id={`theme-blur-${theme.id}`} name="background_blur" type="range" min="0" max="40" defaultValue={theme.background_blur ?? 10} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-panel-opacity-${theme.id}`}>Panel opaklık</Label>
+                        <Input id={`theme-panel-opacity-${theme.id}`} name="panel_opacity" type="range" min="10" max="100" defaultValue={theme.panel_opacity ?? 70} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-button-opacity-${theme.id}`}>Link opaklık</Label>
+                        <Input id={`theme-button-opacity-${theme.id}`} name="button_opacity" type="range" min="0" max="100" defaultValue={theme.button_opacity ?? 12} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-panel-radius-${theme.id}`}>Panel köşe</Label>
+                        <Input id={`theme-panel-radius-${theme.id}`} name="panel_radius" type="range" min="0" max="32" defaultValue={theme.panel_radius ?? 8} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`theme-button-radius-${theme.id}`}>Link köşe</Label>
+                        <Input id={`theme-button-radius-${theme.id}`} name="button_radius" type="range" min="0" max="32" defaultValue={theme.button_radius ?? 6} />
+                      </div>
+                      <div className="flex items-end">
+                        <Button type="submit">Temayı kaydet</Button>
+                      </div>
+                    </form>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <form action={clearCommunityThemeMediaAction}>
+                        <input type="hidden" name="theme_id" value={theme.id} />
+                        <input type="hidden" name="field" value="banner_url" />
+                        <Button type="submit" size="sm" variant="ghost">Tema arka planını sil</Button>
+                      </form>
+                      <form action={clearCommunityThemeMediaAction}>
+                        <input type="hidden" name="theme_id" value={theme.id} />
+                        <input type="hidden" name="field" value="music_url" />
+                        <Button type="submit" size="sm" variant="ghost">Tema şarkısını sil</Button>
+                      </form>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <p className="rounded-lg border border-white/10 bg-white/[0.04] p-4 text-sm text-zinc-400">
+                  Düzenlenecek tema yok.
                 </p>
               )}
             </div>

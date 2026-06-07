@@ -8,6 +8,7 @@ import { useFormStatus } from "react-dom";
 import { Gamepad2, Music, Save, Trash2, Upload } from "lucide-react";
 import {
   disconnectDiscordAction,
+  removeImageAction,
   removeMusicAction,
   updateProfileAction,
   uploadImageAction,
@@ -151,6 +152,11 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
               <option value="grid">Grid</option>
               <option value="spotlight">Spotlight</option>
               <option value="minimal">Minimal</option>
+              <option value="aurora">Aurora</option>
+              <option value="scanlines">Scanlines</option>
+              <option value="vignette">Vignette</option>
+              <option value="noise">Noise</option>
+              <option value="rings">Rings</option>
             </Select>
           </div>
           <div className="space-y-2">
@@ -296,6 +302,11 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
               <option value="solid">Solid</option>
               <option value="outline">Outline</option>
               <option value="neon">Neon</option>
+              <option value="glow">Glow</option>
+              <option value="shine">Shine</option>
+              <option value="hologram">Hologram</option>
+              <option value="pulse">Pulse</option>
+              <option value="lift">Lift</option>
             </Select>
           </div>
           <div className="space-y-2">
@@ -314,6 +325,29 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
               <option value="bold">Bold</option>
               <option value="mono">Mono</option>
               <option value="serif">Serif</option>
+              <option value="cyber">Cyber</option>
+              <option value="pixel">Pixel</option>
+              <option value="script">Script</option>
+              <option value="editorial">Editorial</option>
+              <option value="terminal">Terminal</option>
+              <option value="impact">Impact</option>
+              <option value="soft-serif">Soft serif</option>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="display_name_effect">Görünen isim efekti</Label>
+            <Select
+              id="display_name_effect"
+              name="display_name_effect"
+              defaultValue={profile.display_name_effect ?? "none"}
+            >
+              <option value="none">Sade</option>
+              <option value="gradient-shift">Gradient shift</option>
+              <option value="neon-flicker">Neon flicker</option>
+              <option value="glitch">Glitch</option>
+              <option value="float">Float</option>
+              <option value="shine">Shine</option>
+              <option value="pulse">Pulse</option>
             </Select>
           </div>
           </div>
@@ -367,7 +401,15 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
               {field === "avatar_url" ? "Profil fotoğrafı" : "Arka plan görseli"}
             </Label>
             <Input id={field} name="file" type="file" accept="image/*" />
-            <UploadButton />
+            <div className="flex flex-wrap gap-2">
+              <UploadButton />
+              {field === "banner_url" && profile.banner_url ? (
+                <Button formAction={removeImageAction} variant="ghost">
+                  <Trash2 className="h-4 w-4" />
+                  Arka planı sil
+                </Button>
+              ) : null}
+            </div>
           </form>
         ))}
         <form action={musicAction} className="space-y-3">
@@ -430,6 +472,7 @@ export function ProfileEditor({ profile }: { profile: Profile }) {
             <input type="hidden" name="background_style" value={profile.background_style ?? "soft"} />
             <input type="hidden" name="button_style" value={profile.button_style ?? "glass"} />
             <input type="hidden" name="font_style" value={profile.font_style ?? "clean"} />
+            <input type="hidden" name="display_name_effect" value={profile.display_name_effect ?? "none"} />
             <div className="space-y-2">
               <Label htmlFor="music_title">Şarkı adı</Label>
               <Input id="music_title" name="music_title" defaultValue={profile.music_title ?? ""} />

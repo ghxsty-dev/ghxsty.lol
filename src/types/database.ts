@@ -48,6 +48,7 @@ export type Profile = {
   background_style: string | null;
   button_style: string | null;
   font_style: string | null;
+  display_name_effect: string | null;
   theme: ProfileTheme;
   created_at: string;
   updated_at: string;
@@ -88,6 +89,7 @@ export type CommunityTheme = {
   background_style: string | null;
   button_style: string | null;
   font_style: string | null;
+  display_name_effect: string | null;
   approved_by_profile_id: string | null;
   approved_at: string | null;
   created_at: string;

@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   createCommunityThemeSnapshot,
-  getCommunityThemeUpdate,
+  createProfileThemeApplication,
 } from "@/lib/community-theme";
 import { ensureUserProfile } from "@/lib/profile";
+import { deleteR2ObjectByUrl } from "@/lib/r2";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeUsername } from "@/lib/utils";
 import { validateUsername } from "@/lib/validation";
@@ -157,7 +158,7 @@ export async function cloneProfileAsCommunityThemeAction(formData: FormData) {
     status: "approved",
     approved_by_profile_id: adminProfile.id,
     approved_at: new Date().toISOString(),
-    ...createCommunityThemeSnapshot(profile),
+    ...(await createCommunityThemeSnapshot(profile)),
   });
 
   revalidatePath("/admin");
@@ -180,11 +181,98 @@ export async function applyCommunityThemeToProfileAction(formData: FormData) {
     return;
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (!profile) {
+    return;
+  }
+
   await supabase
     .from("profiles")
-    .update(getCommunityThemeUpdate(theme))
+    .update(await createProfileThemeApplication(theme, profile))
     .eq("id", profileId);
 
   revalidatePath("/admin");
   revalidatePath(`/${currentUsername}`);
+}
+
+export async function updateCommunityThemeAction(formData: FormData) {
+  const { supabase, adminProfile } = await getAdminContext();
+  const themeId = String(formData.get("theme_id") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const status = String(formData.get("status") ?? "pending") as CommunityThemeStatus;
+  const allowedStatuses: CommunityThemeStatus[] = ["pending", "approved", "rejected"];
+
+  if (name.length < 3 || name.length > 40 || !allowedStatuses.includes(status)) {
+    return;
+  }
+
+  await supabase
+    .from("community_themes")
+    .update({
+      name,
+      description: description || null,
+      status,
+      accent_color: getColor(formData, "accent_color", "#ffffff"),
+      page_background_color: getColor(formData, "page_background_color", "#050507"),
+      panel_background_color: getColor(formData, "panel_background_color", "#111113"),
+      button_background_color: getColor(formData, "button_background_color", "#ffffff"),
+      button_text_color: getColor(formData, "button_text_color", "#ffffff"),
+      header_color: getColor(formData, "header_color", "#74d9bf"),
+      header_color_to: getColor(formData, "header_color_to", "#2f9d8f"),
+      background_blur: getRangeNumber(formData, "background_blur", 10, 0, 40),
+      panel_opacity: getRangeNumber(formData, "panel_opacity", 70, 10, 100),
+      button_opacity: getRangeNumber(formData, "button_opacity", 12, 0, 100),
+      panel_radius: getRangeNumber(formData, "panel_radius", 8, 0, 32),
+      button_radius: getRangeNumber(formData, "button_radius", 6, 0, 32),
+      background_style: String(formData.get("background_style") ?? "soft"),
+      button_style: String(formData.get("button_style") ?? "glass"),
+      font_style: String(formData.get("font_style") ?? "clean"),
+      display_name_effect: String(formData.get("display_name_effect") ?? "none"),
+      approved_by_profile_id: status === "approved" ? adminProfile.id : null,
+      approved_at: status === "approved" ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", themeId);
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/themes");
+}
+
+export async function clearCommunityThemeMediaAction(formData: FormData) {
+  const { supabase } = await getAdminContext();
+  const themeId = String(formData.get("theme_id") ?? "");
+  const field = String(formData.get("field") ?? "");
+
+  if (field !== "banner_url" && field !== "music_url") {
+    return;
+  }
+
+  const { data: theme } = await supabase
+    .from("community_themes")
+    .select("banner_url, music_url")
+    .eq("id", themeId)
+    .maybeSingle();
+
+  const oldUrl = field === "banner_url" ? theme?.banner_url : theme?.music_url;
+  await supabase
+    .from("community_themes")
+    .update({
+      [field]: null,
+      ...(field === "music_url" ? { music_title: null } : {}),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", themeId);
+
+  await deleteR2ObjectByUrl(oldUrl);
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/themes");
 }

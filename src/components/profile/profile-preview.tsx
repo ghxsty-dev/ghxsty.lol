@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import { Music2, Pause, Volume2 } from "lucide-react";
 import { getLinkIcon } from "@/lib/link-icons";
 import { cn } from "@/lib/utils";
@@ -39,12 +40,23 @@ export function ProfilePreview({
   const shownLinks = links.slice(0, 6);
   const panelRadius = Math.min(32, Math.max(0, profile.panel_radius ?? 8));
   const buttonRadius = Math.min(32, Math.max(0, profile.button_radius ?? 6));
+  const nameEffectClass =
+    profile.display_name_effect === "gradient-shift"
+      ? "bg-[linear-gradient(90deg,var(--profile-accent),#fff,#67e8f9,var(--profile-accent))] bg-[length:300%_100%] bg-clip-text text-transparent"
+      : profile.display_name_effect === "neon-flicker"
+        ? "drop-shadow-[0_0_12px_var(--profile-accent)]"
+        : "";
 
   return (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-black">
       <div
         className="relative aspect-[9/14] min-h-[560px] overflow-hidden"
-        style={{ backgroundColor: profile.page_background_color ?? "#050507" }}
+        style={
+          {
+            "--profile-accent": profile.accent_color ?? "#ffffff",
+            backgroundColor: profile.page_background_color ?? "#050507",
+          } as CSSProperties
+        }
       >
         {profile.banner_url ? (
           <Image
@@ -118,7 +130,9 @@ export function ProfilePreview({
                   </div>
                 )}
               </div>
-              <h3 className="mt-3 truncate text-xl font-bold">{displayName}</h3>
+              <h3 className="mt-3 truncate text-xl font-bold">
+                <span className={nameEffectClass}>{displayName}</span>
+              </h3>
               <p
                 className="mt-1 truncate text-xs"
                 style={{ color: profile.accent_color ?? "#ffffff" }}

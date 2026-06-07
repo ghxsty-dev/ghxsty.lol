@@ -5,10 +5,14 @@ import { redirect } from "next/navigation";
 import { MAX_PROFILE_LINKS } from "@/lib/limits";
 import {
   createCommunityThemeSnapshot,
-  getCommunityThemeUpdate,
+  createProfileThemeApplication,
 } from "@/lib/community-theme";
 import { ensureUserProfile } from "@/lib/profile";
-import { deleteR2ObjectByUrl, uploadR2Object } from "@/lib/r2";
+import {
+  deleteR2ObjectByUrl,
+  getR2ObjectKeyFromUrl,
+  uploadR2Object,
+} from "@/lib/r2";
 import { createClient } from "@/lib/supabase/server";
 import { normalizeUsername } from "@/lib/utils";
 import {
@@ -152,6 +156,11 @@ async function deleteProfileMediaQuietly(
   url?: string | null,
 ) {
   try {
+    const key = getR2ObjectKeyFromUrl(url);
+    if (key?.startsWith("community-themes/")) {
+      return;
+    }
+
     await deleteR2ObjectByUrl(url);
   } catch {
     // A stale R2 object should not block the profile update the user just made.
@@ -227,6 +236,9 @@ export async function updateProfileAction(
       background_style: String(formData.get("background_style") ?? "soft").trim(),
       button_style: String(formData.get("button_style") ?? "glass").trim(),
       font_style: String(formData.get("font_style") ?? "clean").trim(),
+      display_name_effect: String(
+        formData.get("display_name_effect") ?? "none",
+      ).trim(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", profile.id);
@@ -265,7 +277,7 @@ export async function submitCommunityThemeAction(
     status: "pending",
     approved_by_profile_id: null,
     approved_at: null,
-    ...createCommunityThemeSnapshot(profile),
+    ...(await createCommunityThemeSnapshot(profile)),
   });
 
   if (error) {
@@ -295,8 +307,11 @@ export async function applyCommunityThemeAction(formData: FormData) {
 
   await supabase
     .from("profiles")
-    .update(getCommunityThemeUpdate(theme))
+    .update(await createProfileThemeApplication(theme, profile))
     .eq("id", profile.id);
+
+  await deleteProfileMediaQuietly(supabase, profile.banner_url);
+  await deleteProfileMediaQuietly(supabase, profile.music_url);
 
   revalidatePath("/dashboard");
   revalidatePath(`/${profile.username}`);
@@ -357,6 +372,25 @@ export async function uploadImageAction(
   revalidatePath("/dashboard");
   revalidatePath(`/${profile.username}`);
   return { success: "Görsel yüklendi." };
+}
+
+export async function removeImageAction(formData: FormData) {
+  const { supabase, profile } = await getOwnedProfile();
+  const field = String(formData.get("field"));
+
+  if (field !== "banner_url") {
+    return;
+  }
+
+  await supabase
+    .from("profiles")
+    .update({ [field]: null, updated_at: new Date().toISOString() })
+    .eq("id", profile.id);
+
+  await deleteProfileMediaQuietly(supabase, profile[field]);
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
 }
 
 export async function uploadMusicAction(
