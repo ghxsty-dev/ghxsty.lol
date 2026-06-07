@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 import { THEMES } from "@/lib/themes";
 import { getLinkIcon } from "@/lib/link-icons";
 import { ProfileAudio } from "@/components/profile/profile-audio";
-import type { PublicProfile } from "@/types/database";
+import { ProfileVote } from "@/components/profile/profile-vote";
+import type { ProfileVoteScore, PublicProfile } from "@/types/database";
 
 function getBackgroundStyle(style?: string | null) {
   switch (style) {
@@ -56,7 +57,15 @@ function getFontStyle(style?: string | null) {
   }
 }
 
-export function ProfileView({ profile }: { profile: PublicProfile }) {
+export function ProfileView({
+  profile,
+  voteScore,
+  currentVote,
+}: {
+  profile: PublicProfile;
+  voteScore?: ProfileVoteScore | null;
+  currentVote?: 1 | -1 | null;
+}) {
   const theme = THEMES[profile.theme] ?? THEMES.dark;
   const displayName = profile.display_name || profile.username;
   const accentColor = profile.accent_color ?? "#ffffff";
@@ -163,6 +172,15 @@ export function ProfileView({ profile }: { profile: PublicProfile }) {
               </p>
             ) : null}
           </div>
+
+          <ProfileVote
+            profileId={profile.id}
+            username={profile.username}
+            initialScore={voteScore?.score ?? 0}
+            initialUpvotes={voteScore?.upvotes ?? 0}
+            initialDownvotes={voteScore?.downvotes ?? 0}
+            initialVote={currentVote ?? null}
+          />
 
           {profile.music_url ? (
             <div className="relative mt-6">

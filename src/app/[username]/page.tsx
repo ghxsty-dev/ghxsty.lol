@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ProfileView } from "@/components/profile/profile-view";
 import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/utils";
-import type { PublicProfile } from "@/types/database";
+import type { ProfileVoteScore, PublicProfile } from "@/types/database";
 
 type PageProps = {
   params: Promise<{ username: string }>;
@@ -69,5 +69,31 @@ export default async function PublicProfilePage({ params }: PageProps) {
     notFound();
   }
 
-  return <ProfileView profile={profile} />;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const [{ data: score }, { data: currentVote }] = await Promise.all([
+    supabase
+      .from("profile_vote_scores")
+      .select("*")
+      .eq("profile_id", profile.id)
+      .maybeSingle(),
+    user
+      ? supabase
+          .from("profile_votes")
+          .select("value")
+          .eq("profile_id", profile.id)
+          .eq("user_id", user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  return (
+    <ProfileView
+      profile={profile}
+      voteScore={(score as ProfileVoteScore | null) ?? null}
+      currentVote={(currentVote?.value as 1 | -1 | undefined) ?? null}
+    />
+  );
 }

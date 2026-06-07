@@ -51,6 +51,22 @@ export type ProfileLink = {
   position: number;
 };
 
+export type ProfileVote = {
+  id: string;
+  profile_id: string;
+  user_id: string;
+  value: 1 | -1;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProfileVoteScore = {
+  profile_id: string;
+  upvotes: number;
+  downvotes: number;
+  score: number;
+};
+
 export type PublicProfile = Profile & {
   profile_links: ProfileLink[];
 };
@@ -70,6 +86,20 @@ export type Database = {
         Row: ProfileLink;
         Insert: Omit<ProfileLink, "id"> & { id?: string };
         Update: Partial<Omit<ProfileLink, "id" | "profile_id">>;
+      };
+      profile_votes: {
+        Row: ProfileVote;
+        Insert: Omit<ProfileVote, "id" | "created_at" | "updated_at"> & {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Omit<ProfileVote, "id" | "profile_id" | "user_id" | "created_at">>;
+      };
+    };
+    Views: {
+      profile_vote_scores: {
+        Row: ProfileVoteScore;
       };
     };
   };
