@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
-import { ExternalLink, LogOut, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { redirect } from "next/navigation";
-import { signOutAction } from "@/app/(auth)/actions";
 import { CommunityThemesPanel } from "@/components/dashboard/community-themes-panel";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { LinkManager } from "@/components/dashboard/link-manager";
 import { ProfileEditor } from "@/components/dashboard/profile-editor";
 import { UsernameSetup } from "@/components/dashboard/username-setup";
@@ -16,7 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { ensureUserProfile, hasTemporaryUsername } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
 import type {
@@ -78,16 +76,17 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-[#050507] p-3 text-white sm:p-4">
-      <div className="flex w-full flex-col gap-4">
+      <div className="grid w-full gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <DashboardSidebar username={typedProfile.username} />
+        <div className="flex min-w-0 flex-col gap-4">
         <header className="flex flex-col gap-4 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <Link href="/" className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white">
-              <Image src="/glitch-logo.png" alt="ghxsty.lol" width={22} height={22} className="rounded" />
-              ghxsty.lol
-            </Link>
             <h1 className="mt-2 text-3xl font-bold tracking-normal">
               Dashboard
             </h1>
+            <p className="mt-1 text-sm text-zinc-500">
+              Profil, görünüm, medya ve linklerini tek yerden yönet.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             {isAdmin ? (
@@ -99,19 +98,6 @@ export default async function DashboardPage() {
                 Admin
               </Link>
             ) : null}
-            <Link
-              href={`/${typedProfile.username}`}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Profili aç
-            </Link>
-            <form action={signOutAction}>
-              <Button type="submit" variant="ghost">
-                <LogOut className="h-4 w-4" />
-                Çıkış
-              </Button>
-            </form>
           </div>
         </header>
 
@@ -177,6 +163,7 @@ export default async function DashboardPage() {
               </CardContent>
             </Card>
           </aside>
+        </div>
         </div>
       </div>
     </main>

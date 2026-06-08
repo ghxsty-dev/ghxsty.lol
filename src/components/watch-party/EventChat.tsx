@@ -222,33 +222,39 @@ export function EventChat({
       </div>
       <div ref={listRef} className="flex-1 space-y-1 overflow-y-auto p-3">
         {items.length ? (
-          items.map((item) => (
-            item.type === "system" ? (
-              <p key={item.id} className="rounded-md bg-white/[0.035] px-3 py-2 text-center text-xs text-zinc-400">
-                {item.text}
-              </p>
-            ) : (
-              <div key={item.message.id} className="group relative">
-                <ChatMessage message={item.message} profile={item.message.profile} />
-                {(canModerate || item.message.user_id === currentUserId) ? (
-                  <form
-                    action={(formData) => {
-                      startTransition(() => {
-                        void deleteMessageAction(formData);
-                      });
-                    }}
-                    className="absolute right-2 top-2 opacity-0 transition group-hover:opacity-100"
-                  >
-                    <input type="hidden" name="event_id" value={eventId} />
-                    <input type="hidden" name="message_id" value={item.message.id} />
-                    <Button type="submit" size="sm" variant="ghost">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </form>
-                ) : null}
-              </div>
-            )
-          ))
+          items.map((item, index) => {
+            const previousItem = items[index - 1];
+            const compact =
+              item.type === "message" &&
+              previousItem?.type === "message" &&
+              previousItem.message.user_id === item.message.user_id;
+
+            return item.type === "system" ? (
+                <p key={item.id} className="rounded-md bg-white/[0.035] px-3 py-2 text-center text-xs text-zinc-400">
+                  {item.text}
+                </p>
+              ) : (
+                <div key={item.message.id} className="group relative">
+                  <ChatMessage message={item.message} profile={item.message.profile} compact={compact} />
+                  {(canModerate || item.message.user_id === currentUserId) ? (
+                    <form
+                      action={(formData) => {
+                        startTransition(() => {
+                          void deleteMessageAction(formData);
+                        });
+                      }}
+                      className="absolute right-2 top-1 opacity-0 transition group-hover:opacity-100"
+                    >
+                      <input type="hidden" name="event_id" value={eventId} />
+                      <input type="hidden" name="message_id" value={item.message.id} />
+                      <Button type="submit" size="sm" variant="ghost">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </form>
+                  ) : null}
+                </div>
+              );
+          })
         ) : (
           <p className="p-4 text-sm text-zinc-500">İlk mesajı sen yaz.</p>
         )}

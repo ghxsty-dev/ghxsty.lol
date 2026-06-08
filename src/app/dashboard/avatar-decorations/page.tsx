@@ -1,7 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
 import { Check, X } from "lucide-react";
 import { setAvatarDecorationAction } from "@/app/dashboard/actions";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { Button } from "@/components/ui/button";
 import { ensureUserProfile } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
@@ -32,12 +32,11 @@ export default async function AvatarDecorationsPage() {
 
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
-      <div className="mx-auto max-w-6xl">
+      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <DashboardSidebar username={profile.username} />
+        <div className="min-w-0">
         <header className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <Link href="/dashboard" className="text-sm text-zinc-400 hover:text-white">
-              Dashboard
-            </Link>
             <h1 className="mt-2 text-3xl font-bold">Avatar Dekorasyonları</h1>
             <p className="mt-1 text-sm text-zinc-500">Bir dekorasyon kartına tıklayarak avatarına uygula.</p>
           </div>
@@ -82,6 +81,7 @@ export default async function AvatarDecorationsPage() {
               </form>
             );
           })}
+        </div>
         </div>
       </div>
     </main>

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { deleteR2ObjectByKey } from "@/lib/r2";
+import { deleteR2ObjectByKey, deleteR2ObjectByUrl } from "@/lib/r2";
 import { requireModeratorOrAdmin, requireUser } from "@/lib/permissions";
 import type { EventCommandType, EventStatus } from "@/types/events";
 
@@ -239,6 +239,34 @@ export async function deleteEventVideoAction(formData: FormData) {
 
   revalidatePath(`/dashboard/events/${eventId}`);
   revalidatePath(`/events/${eventId}`);
+}
+
+export async function deleteEventAction(formData: FormData) {
+  const { supabase } = await requireModeratorOrAdmin("/dashboard");
+  const eventId = cleanText(formData.get("event_id"), 80);
+
+  if (!eventId) {
+    return;
+  }
+
+  const { data: event } = await supabase
+    .from("events")
+    .select("video_storage_key, thumbnail_url")
+    .eq("id", eventId)
+    .maybeSingle();
+
+  await Promise.all([
+    deleteR2ObjectByKey(event?.video_storage_key),
+    deleteR2ObjectByUrl(event?.thumbnail_url),
+  ]);
+
+  await supabase.from("events").delete().eq("id", eventId);
+
+  revalidatePath("/events");
+  revalidatePath("/dashboard/events");
+  revalidatePath(`/events/${eventId}`);
+  revalidatePath(`/dashboard/events/${eventId}`);
+  redirect("/dashboard/events");
 }
 
 export async function createAnnouncementAction(formData: FormData) {

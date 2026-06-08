@@ -221,10 +221,23 @@ export async function deleteCommunityThemeAction(formData: FormData) {
   const { supabase } = await getAdminContext();
   const themeId = String(formData.get("theme_id") ?? "");
 
+  const { data: theme } = await supabase
+    .from("community_themes")
+    .select("banner_url, music_url")
+    .eq("id", themeId)
+    .maybeSingle();
+
+  await Promise.all([
+    deleteR2ObjectByUrl(theme?.banner_url),
+    deleteR2ObjectByUrl(theme?.music_url),
+  ]);
+
   await supabase.from("community_themes").delete().eq("id", themeId);
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/themes");
+  revalidatePath("/themes");
 }
 
 export async function setProfileAdminAction(formData: FormData) {

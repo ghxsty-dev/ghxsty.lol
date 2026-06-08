@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createEventAction } from "@/app/dashboard/events/actions";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,11 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { requireModeratorOrAdmin } from "@/lib/permissions";
 
 export default async function NewEventPage() {
-  await requireModeratorOrAdmin("/dashboard");
+  const { profile } = await requireModeratorOrAdmin("/dashboard");
 
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
-      <div className="mx-auto max-w-3xl">
+      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <DashboardSidebar username={profile.username} />
+        <div className="min-w-0">
         <Link href="/dashboard/events" className="text-sm text-zinc-400 hover:text-white">Events</Link>
         <Card className="mt-4">
           <CardHeader>
@@ -36,6 +39,7 @@ export default async function NewEventPage() {
             </form>
           </CardContent>
         </Card>
+        </div>
       </div>
     </main>
   );

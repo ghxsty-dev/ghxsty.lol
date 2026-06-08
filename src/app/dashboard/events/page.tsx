@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { CalendarPlus, ExternalLink } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { CalendarPlus, ExternalLink, Trash2 } from "lucide-react";
+import { deleteEventAction } from "@/app/dashboard/events/actions";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireModeratorOrAdmin } from "@/lib/permissions";
 import type { WatchEvent } from "@/types/events";
 
 export default async function DashboardEventsPage() {
-  const { supabase } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase, profile } = await requireModeratorOrAdmin("/dashboard");
   const { data } = await supabase
     .from("events")
     .select("*")
@@ -16,11 +18,15 @@ export default async function DashboardEventsPage() {
 
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
-      <div className="mx-auto max-w-6xl">
+      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <DashboardSidebar username={profile.username} />
+        <div className="min-w-0">
         <header className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <Link href="/dashboard" className="text-sm text-zinc-400 hover:text-white">Dashboard</Link>
             <h1 className="mt-2 text-3xl font-bold">Watch Party Events</h1>
+            <p className="mt-1 text-sm text-zinc-500">
+              Event oluştur, yayını yönet ve public sayfaları kontrol et.
+            </p>
           </div>
           <Link href="/dashboard/events/new" className={buttonVariants()}>
               <CalendarPlus className="h-4 w-4" />
@@ -42,12 +48,19 @@ export default async function DashboardEventsPage() {
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="line-clamp-2 text-sm text-zinc-400">{event.description || "Açıklama yok."}</p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Link href={`/events/${event.id}`} className={buttonVariants({ variant: "secondary" })}>
                         <ExternalLink className="h-4 w-4" />
                         Public
                     </Link>
                     <Link href={`/dashboard/events/${event.id}`} className={buttonVariants()}>Yönet</Link>
+                    <form action={deleteEventAction}>
+                      <input type="hidden" name="event_id" value={event.id} />
+                      <Button type="submit" variant="destructive">
+                        <Trash2 className="h-4 w-4" />
+                        Sil
+                      </Button>
+                    </form>
                   </div>
                 </CardContent>
               </Card>
@@ -57,6 +70,7 @@ export default async function DashboardEventsPage() {
               <CardContent className="p-6 text-zinc-400">Henüz event yok.</CardContent>
             </Card>
           )}
+        </div>
         </div>
       </div>
     </main>

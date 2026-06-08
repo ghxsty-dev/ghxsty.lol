@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import {
   createAnnouncementAction,
   createPollAction,
+  deleteEventAction,
   deleteEventVideoAction,
   updateEventAction,
 } from "@/app/dashboard/events/actions";
+import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { AdminPlaybackControls } from "@/components/watch-party/AdminPlaybackControls";
 import { EventChat } from "@/components/watch-party/EventChat";
 import { EventMediaUploader } from "@/components/watch-party/EventMediaUploader";
@@ -74,16 +77,27 @@ export default async function ManageEventPage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
-      <div className="mx-auto max-w-[1800px] space-y-4">
+      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <DashboardSidebar username={profile.username} />
+        <div className="min-w-0 space-y-4">
         <EventStatusWatcher eventId={typedEvent.id} initialStatus={typedEvent.status} />
         <header className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link href="/dashboard/events" className="text-sm text-zinc-400 hover:text-white">Events</Link>
             <h1 className="mt-2 text-3xl font-bold">{typedEvent.title}</h1>
           </div>
-          <Link href={`/events/${typedEvent.id}`} className={buttonVariants({ variant: "secondary" })}>
-            Public sayfa
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/events/${typedEvent.id}`} className={buttonVariants({ variant: "secondary" })}>
+              Public sayfa
+            </Link>
+            <form action={deleteEventAction}>
+              <input type="hidden" name="event_id" value={typedEvent.id} />
+              <Button type="submit" variant="destructive">
+                <Trash2 className="h-4 w-4" />
+                Eventi sil
+              </Button>
+            </form>
+          </div>
         </header>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -174,6 +188,7 @@ export default async function ManageEventPage({ params }: PageProps) {
               </CardContent>
             </Card>
           </aside>
+        </div>
         </div>
       </div>
     </main>

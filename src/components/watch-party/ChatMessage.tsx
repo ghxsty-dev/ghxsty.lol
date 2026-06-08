@@ -40,12 +40,40 @@ function AdminShieldBadge() {
 export function ChatMessage({
   message,
   profile,
+  compact = false,
 }: {
   message: EventMessage;
   profile?: EventMessageProfile | null;
+  compact?: boolean;
 }) {
   const displayName = profile?.display_name || profile?.username || "Kullanıcı";
   const username = profile?.username || "unknown";
+
+  if (compact) {
+    return (
+      <div className="flex gap-3 rounded-md px-2 py-0.5 transition hover:bg-white/[0.04]">
+        <div className="w-10 shrink-0" />
+        <div className="min-w-0 flex-1 pl-3">
+          {message.message_type === "gif" && message.gif_url ? (
+            <div className="my-1 overflow-hidden rounded-md border border-white/10 bg-black/30">
+              <Image
+                src={message.gif_url}
+                alt={message.message}
+                width={260}
+                height={180}
+                unoptimized
+                className="max-h-64 w-auto max-w-full object-contain"
+              />
+            </div>
+          ) : (
+            <p className="whitespace-pre-wrap break-words text-sm leading-5 text-zinc-200">
+              {message.message}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex gap-3 rounded-md px-2 py-2 transition hover:bg-white/[0.04]">

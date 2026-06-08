@@ -597,6 +597,13 @@ export default async function AdminPage() {
                         <input type="hidden" name="field" value="music_url" />
                         <Button type="submit" size="sm" variant="ghost">Tema şarkısını sil</Button>
                       </form>
+                      <form action={deleteCommunityThemeAction}>
+                        <input type="hidden" name="theme_id" value={theme.id} />
+                        <Button type="submit" size="sm" variant="destructive">
+                          <Trash2 className="h-4 w-4" />
+                          Temayı sil
+                        </Button>
+                      </form>
                     </div>
                   </article>
                 ))
