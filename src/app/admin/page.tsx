@@ -2,20 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Calendar, ExternalLink, ShieldCheck, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, Calendar, Search, ShieldCheck, Trash2, Upload, Users } from "lucide-react";
 import {
-  applyCommunityThemeToProfileAction,
   clearCommunityThemeMediaAction,
-  cloneProfileAsCommunityThemeAction,
   createAvatarDecorationAction,
   createCommunityThemeFromAdminAction,
   deleteAvatarDecorationAction,
   deleteCommunityThemeAction,
   setCommunityThemeStatusAction,
-  setProfileAdminAction,
   updateAvatarDecorationAction,
   updateCommunityThemeAction,
-  updateProfileFromAdminAction,
 } from "@/app/admin/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +23,6 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   CommunityThemeWithAuthor,
   AvatarDecoration,
-  Profile,
 } from "@/types/database";
 
 export const metadata: Metadata = {
@@ -49,19 +44,12 @@ export default async function AdminPage() {
     redirect("/dashboard");
   }
 
-  const { data: rawProfiles } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false });
-  const profiles = (rawProfiles ?? []) as Profile[];
-
   const { data: rawThemes } = await supabase
     .from("community_themes")
     .select("*, author:profiles!community_themes_author_profile_id_fkey(username, display_name, avatar_url)")
     .order("created_at", { ascending: false });
   const themes = (rawThemes ?? []) as CommunityThemeWithAuthor[];
   const pendingThemes = themes.filter((theme) => theme.status === "pending");
-  const approvedThemes = themes.filter((theme) => theme.status === "approved");
   const { data: rawDecorations } = await supabase
     .from("avatar_decorations")
     .select("*")
@@ -103,7 +91,7 @@ export default async function AdminPage() {
                 ["#tema-olustur", "Tema oluştur"],
                 ["#tema-onaylari", "Tema onayları"],
                 ["#temalari-yonet", "Temaları yönet"],
-                ["#uyeleri-yonet", "Üyeleri yönet"],
+                ["/admin/users", "Üyeleri yönet"],
                 ["#avatar-dekorasyonlari", "Avatar dekorasyonları"],
                 ["/dashboard/events", "Eventleri yönet"],
               ].map(([href, label]) => (
@@ -640,139 +628,25 @@ export default async function AdminPage() {
 
         <Card id="uyeleri-yonet">
           <CardHeader>
-            <CardTitle>Kullanıcılar ve Arayüz Kontrolü</CardTitle>
+            <CardTitle>Üyeleri Yönet</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {profiles.map((profile) => (
-                <article
-                  key={profile.id}
-                  className="rounded-lg border border-white/10 bg-white/[0.04] p-4"
-                >
-                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h2 className="font-semibold">
-                        {profile.display_name || profile.username}
-                      </h2>
-                      <p className="text-sm text-zinc-500">@{profile.username}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Link
-                        href={`/${profile.username}`}
-                        className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-3 text-sm text-white transition hover:bg-white/15"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        Aç
-                      </Link>
-                      <form action={setProfileAdminAction} className="flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3">
-                        <input type="hidden" name="profile_id" value={profile.id} />
-                        <input
-                          id={`admin-${profile.id}`}
-                          name="is_admin"
-                          type="checkbox"
-                          defaultChecked={profile.is_admin ?? false}
-                          className="h-4 w-4 accent-white"
-                        />
-                        <Label htmlFor={`admin-${profile.id}`}>Admin</Label>
-                        <Button type="submit" size="sm" variant="ghost">Kaydet</Button>
-                      </form>
-                    </div>
-                  </div>
-
-                  <form action={updateProfileFromAdminAction} className="grid gap-4 lg:grid-cols-4">
-                    <input type="hidden" name="profile_id" value={profile.id} />
-                    <input type="hidden" name="current_username" value={profile.username} />
-                    <div className="space-y-2">
-                      <Label htmlFor={`username-${profile.id}`}>Kullanıcı adı</Label>
-                      <Input id={`username-${profile.id}`} name="username" defaultValue={profile.username} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`display-${profile.id}`}>Görünen isim</Label>
-                      <Input id={`display-${profile.id}`} name="display_name" defaultValue={profile.display_name ?? ""} />
-                    </div>
-                    <div className="space-y-2 lg:col-span-2">
-                      <Label htmlFor={`bio-${profile.id}`}>Bio</Label>
-                      <Textarea id={`bio-${profile.id}`} name="bio" defaultValue={profile.bio ?? ""} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`decoration-${profile.id}`}>Avatar dekorasyonu</Label>
-                      <select
-                        id={`decoration-${profile.id}`}
-                        name="avatar_decoration_id"
-                        defaultValue={profile.avatar_decoration_id ?? ""}
-                        className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none"
-                      >
-                        <option value="">Yok</option>
-                        {decorations.filter((decoration) => decoration.is_active).map((decoration) => (
-                          <option key={decoration.id} value={decoration.id}>{decoration.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`accent-${profile.id}`}>Vurgu</Label>
-                      <Input id={`accent-${profile.id}`} name="accent_color" type="color" defaultValue={profile.accent_color ?? "#ffffff"} className="h-10 w-16 p-1" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`page-${profile.id}`}>Sayfa</Label>
-                      <Input id={`page-${profile.id}`} name="page_background_color" type="color" defaultValue={profile.page_background_color ?? "#050507"} className="h-10 w-16 p-1" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`panel-${profile.id}`}>Panel</Label>
-                      <Input id={`panel-${profile.id}`} name="panel_background_color" type="color" defaultValue={profile.panel_background_color ?? "#111113"} className="h-10 w-16 p-1" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`panel-opacity-${profile.id}`}>Panel opaklık</Label>
-                      <Input id={`panel-opacity-${profile.id}`} name="panel_opacity" type="range" min="10" max="100" defaultValue={profile.panel_opacity ?? 70} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`button-opacity-${profile.id}`}>Link opaklık</Label>
-                      <Input id={`button-opacity-${profile.id}`} name="button_opacity" type="range" min="0" max="100" defaultValue={profile.button_opacity ?? 12} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`panel-radius-${profile.id}`}>Panel köşe</Label>
-                      <Input id={`panel-radius-${profile.id}`} name="panel_radius" type="range" min="0" max="32" defaultValue={profile.panel_radius ?? 8} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor={`button-radius-${profile.id}`}>Link köşe</Label>
-                      <Input id={`button-radius-${profile.id}`} name="button_radius" type="range" min="0" max="32" defaultValue={profile.button_radius ?? 6} />
-                    </div>
-                    <div className="flex items-end">
-                      <Button type="submit">Profili güncelle</Button>
-                    </div>
-                  </form>
-
-                  <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                    <form action={cloneProfileAsCommunityThemeAction} className="flex flex-col gap-2 rounded-md border border-white/10 bg-white/[0.04] p-3 sm:flex-row sm:items-end">
-                      <input type="hidden" name="profile_id" value={profile.id} />
-                      <div className="flex-1 space-y-2">
-                        <Label htmlFor={`clone-theme-${profile.id}`}>Bu arayüzü tema yap</Label>
-                        <Input id={`clone-theme-${profile.id}`} name="name" placeholder={`${profile.username} theme`} />
-                      </div>
-                      <Button type="submit" variant="secondary">Tema oluştur</Button>
-                    </form>
-                    <form action={applyCommunityThemeToProfileAction} className="flex flex-col gap-2 rounded-md border border-white/10 bg-white/[0.04] p-3 sm:flex-row sm:items-end">
-                      <input type="hidden" name="profile_id" value={profile.id} />
-                      <input type="hidden" name="current_username" value={profile.username} />
-                      <div className="flex-1 space-y-2">
-                        <Label htmlFor={`apply-theme-${profile.id}`}>Onaylı tema uygula</Label>
-                        <select
-                          id={`apply-theme-${profile.id}`}
-                          name="theme_id"
-                          className="flex h-10 w-full rounded-md border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-white outline-none"
-                        >
-                          {approvedThemes.map((theme) => (
-                            <option key={theme.id} value={theme.id}>{theme.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <Button type="submit" variant="secondary" disabled={!approvedThemes.length}>
-                        Uygula
-                      </Button>
-                    </form>
-                  </div>
-                </article>
-              ))}
+          <CardContent className="grid gap-4 md:grid-cols-[auto_1fr_auto] md:items-center">
+            <span className="inline-flex h-12 w-12 items-center justify-center rounded-md border border-white/10 bg-white/10">
+              <Users className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-semibold">Aramalı üye yönetimi</p>
+              <p className="mt-1 text-sm leading-6 text-zinc-400">
+                Üyeleri ayrı sayfada ara; ayarlar, admin yetkisi ve profil görünümünü detay sayfasından düzenle.
+              </p>
             </div>
+            <Link
+              href="/admin/users"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-white px-4 text-sm font-medium text-zinc-950 transition hover:bg-zinc-200"
+            >
+              <Search className="h-4 w-4" />
+              Üye ara
+            </Link>
           </CardContent>
         </Card>
           </div>

@@ -247,10 +247,16 @@ export async function setProfileAdminAction(formData: FormData) {
 
   await supabase
     .from("profiles")
-    .update({ is_admin: isAdmin, updated_at: new Date().toISOString() })
+    .update({
+      is_admin: isAdmin,
+      role: isAdmin ? "admin" : "user",
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", profileId);
 
   revalidatePath("/admin");
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${profileId}`);
 }
 
 export async function updateProfileFromAdminAction(formData: FormData) {
@@ -284,6 +290,8 @@ export async function updateProfileFromAdminAction(formData: FormData) {
     .eq("id", profileId);
 
   revalidatePath("/admin");
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${profileId}`);
   revalidatePath(`/${currentUsername}`);
   revalidatePath(`/${username}`);
 }
@@ -318,6 +326,8 @@ export async function cloneProfileAsCommunityThemeAction(formData: FormData) {
   });
 
   revalidatePath("/admin");
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${profileId}`);
   revalidatePath("/dashboard");
 }
 
@@ -410,6 +420,8 @@ export async function applyCommunityThemeToProfileAction(formData: FormData) {
     .eq("id", profileId);
 
   revalidatePath("/admin");
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${profileId}`);
   revalidatePath(`/${currentUsername}`);
 }
 

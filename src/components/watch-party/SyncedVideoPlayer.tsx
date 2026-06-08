@@ -14,6 +14,22 @@ function expectedTime(event: WatchEvent) {
   return Math.max(0, event.playback_position + elapsed);
 }
 
+function isIframeEmbedUrl(url?: string | null) {
+  if (!url) {
+    return false;
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+    const pathname = parsedUrl.pathname.toLowerCase();
+    const directVideo = /\.(mp4|webm|ogg|mov)(\?|$)/i.test(`${pathname}${parsedUrl.search}`);
+
+    return !directVideo && (pathname.includes("/embed/") || parsedUrl.searchParams.has("embed"));
+  } catch {
+    return false;
+  }
+}
+
 export function SyncedVideoPlayer({
   initialEvent,
   isAdmin,
@@ -28,10 +44,11 @@ export function SyncedVideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [volume, setVolume] = useState(80);
   const [muted, setMuted] = useState(false);
+  const isEmbed = isIframeEmbedUrl(event.video_url);
 
   const syncToState = useCallback((nextEvent = event) => {
     const video = videoRef.current;
-    if (!video || !nextEvent.video_url) {
+    if (!video || !nextEvent.video_url || isIframeEmbedUrl(nextEvent.video_url)) {
       return;
     }
 
@@ -167,30 +184,41 @@ export function SyncedVideoPlayer({
               className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.10),rgba(0,0,0,0.92)_62%)]"
             />
           )}
-          <video
-            ref={videoRef}
-            data-watch-party-video="true"
-            src={event.video_url}
-            poster={event.thumbnail_url ?? undefined}
-            controls={isAdmin}
-            playsInline
-            className="relative z-10 aspect-video w-full bg-transparent object-contain fullscreen:max-h-screen"
-            onPlay={() => {
-              if (!isAdmin && !event.is_playing) {
-                syncToState();
-              }
-            }}
-            onPause={() => {
-              if (!isAdmin && event.is_playing) {
-                syncToState();
-              }
-            }}
-            onSeeking={() => {
-              if (!isAdmin) {
-                syncToState();
-              }
-            }}
-          />
+          {isEmbed ? (
+            <iframe
+              src={event.video_url}
+              title={event.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
+              className="relative z-10 aspect-video w-full border-0 bg-black fullscreen:h-screen fullscreen:max-h-screen"
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              data-watch-party-video="true"
+              src={event.video_url}
+              poster={event.thumbnail_url ?? undefined}
+              controls={isAdmin}
+              playsInline
+              className="relative z-10 aspect-video w-full bg-transparent object-contain fullscreen:max-h-screen"
+              onPlay={() => {
+                if (!isAdmin && !event.is_playing) {
+                  syncToState();
+                }
+              }}
+              onPause={() => {
+                if (!isAdmin && event.is_playing) {
+                  syncToState();
+                }
+              }}
+              onSeeking={() => {
+                if (!isAdmin) {
+                  syncToState();
+                }
+              }}
+            />
+          )}
           <button
             type="button"
             onClick={() => void toggleFullscreen()}
@@ -199,6 +227,7 @@ export function SyncedVideoPlayer({
           >
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
+          {!isEmbed ? (
           <div className="absolute bottom-3 left-3 z-20 flex h-10 items-center gap-2 rounded-md border border-white/10 bg-black/60 px-3 text-white backdrop-blur">
             <button
               type="button"
@@ -221,6 +250,7 @@ export function SyncedVideoPlayer({
               {muted ? 0 : volume}
             </span>
           </div>
+          ) : null}
         </>
       ) : (
         <div className="flex aspect-video items-center justify-center bg-zinc-950 text-sm text-zinc-500">

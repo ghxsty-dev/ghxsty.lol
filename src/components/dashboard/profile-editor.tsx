@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
-import { Gamepad2, Music, Palette, Save, Trash2, Upload } from "lucide-react";
+import { Gamepad2, Music, Save, Trash2, Upload } from "lucide-react";
 import {
   disconnectDiscordAction,
   removeImageAction,
@@ -268,17 +268,10 @@ export function ProfileEditor({
               </div>
             </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+          <div className="grid gap-4">
             <p className="text-xs leading-5 text-zinc-500">
               Kullanıcı adını değiştirmek için Hesap Ayarları sayfasını kullan.
             </p>
-            <Link
-              href="/dashboard/avatar-decorations"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
-            >
-              <Palette className="h-4 w-4" />
-              Avatar dekorasyonları
-            </Link>
           </div>
           <div className="space-y-2">
             <Label htmlFor="bio">Hakkımda</Label>
