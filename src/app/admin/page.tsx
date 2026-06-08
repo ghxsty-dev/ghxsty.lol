@@ -96,7 +96,29 @@ export default async function AdminPage() {
           </div>
         </header>
 
-        <Card>
+        <div className="grid gap-4 lg:grid-cols-[230px_minmax(0,1fr)]">
+          <aside className="lg:sticky lg:top-4 lg:self-start">
+            <nav className="grid gap-1 rounded-lg border border-white/10 bg-white/[0.04] p-3">
+              {[
+                ["#tema-olustur", "Tema oluştur"],
+                ["#tema-onaylari", "Tema onayları"],
+                ["#temalari-yonet", "Temaları yönet"],
+                ["#uyeleri-yonet", "Üyeleri yönet"],
+                ["#avatar-dekorasyonlari", "Avatar dekorasyonları"],
+                ["/dashboard/events", "Eventleri yönet"],
+              ].map(([href, label]) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="rounded-md px-3 py-2 text-sm text-zinc-400 transition hover:bg-white/10 hover:text-white"
+                >
+                  {label}
+                </Link>
+              ))}
+            </nav>
+          </aside>
+          <div className="min-w-0 space-y-4">
+        <Card id="tema-olustur">
           <CardHeader>
             <CardTitle>Admin Tema Oluştur</CardTitle>
           </CardHeader>
@@ -311,7 +333,7 @@ export default async function AdminPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card id="avatar-dekorasyonlari">
           <CardHeader>
             <CardTitle>Avatar Dekorasyonları</CardTitle>
           </CardHeader>
@@ -376,7 +398,7 @@ export default async function AdminPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card id="tema-onaylari">
           <CardHeader>
             <CardTitle>Topluluk Tema Onayları</CardTitle>
           </CardHeader>
@@ -439,7 +461,7 @@ export default async function AdminPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card id="temalari-yonet">
           <CardHeader>
             <CardTitle>Tema Düzenleme</CardTitle>
           </CardHeader>
@@ -616,7 +638,7 @@ export default async function AdminPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card id="uyeleri-yonet">
           <CardHeader>
             <CardTitle>Kullanıcılar ve Arayüz Kontrolü</CardTitle>
           </CardHeader>
@@ -753,6 +775,8 @@ export default async function AdminPage() {
             </div>
           </CardContent>
         </Card>
+          </div>
+        </div>
       </div>
     </main>
   );

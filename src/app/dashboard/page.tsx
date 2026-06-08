@@ -77,7 +77,7 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen bg-[#050507] p-3 text-white sm:p-4">
       <div className="grid w-full gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <DashboardSidebar username={typedProfile.username} />
+        <DashboardSidebar username={typedProfile.username} isAdmin={isAdmin} />
         <div className="flex min-w-0 flex-col gap-4">
         <header className="flex flex-col gap-4 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>

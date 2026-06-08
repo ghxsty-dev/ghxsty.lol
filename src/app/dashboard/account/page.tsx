@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LogOut, Mail, UserRound } from "lucide-react";
 import { signOutAction } from "@/app/(auth)/actions";
+import { AccountSettingsForm } from "@/components/dashboard/account-settings-form";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +28,7 @@ export default async function DashboardAccountPage() {
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
       <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <DashboardSidebar username={profile.username} />
+        <DashboardSidebar username={profile.username} isAdmin={profile.role === "admin" || profile.is_admin === true} />
         <div className="min-w-0 space-y-4">
           <Card>
             <CardHeader>
@@ -55,6 +56,18 @@ export default async function DashboardAccountPage() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Kullanıcı Adı</CardTitle>
+              <CardDescription>
+                Public profil adresini buradan değiştir.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AccountSettingsForm username={profile.username} />
             </CardContent>
           </Card>
 

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { finalizeEventUploadAction } from "@/app/dashboard/events/actions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 function uploadToR2({
@@ -68,13 +67,14 @@ export function EventMediaUploader({
   accept: string;
 }) {
   const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [pending, setPending] = useState(false);
 
-  async function upload() {
-    if (!file) {
+  async function upload(selectedFile = file) {
+    if (!selectedFile) {
       setStatus("Dosya seç.");
       return;
     }
@@ -90,9 +90,9 @@ export function EventMediaUploader({
         body: JSON.stringify({
           eventId,
           kind,
-          fileName: file.name,
-          contentType: file.type,
-          size: file.size,
+          fileName: selectedFile.name,
+          contentType: selectedFile.type,
+          size: selectedFile.size,
         }),
       });
       const payload = (await response.json().catch(() => ({}))) as {
@@ -111,7 +111,7 @@ export function EventMediaUploader({
       setStatus("R2 yükleniyor...");
       await uploadToR2({
         uploadUrl: payload.uploadUrl,
-        file,
+        file: selectedFile,
         contentType: payload.contentType,
         onProgress: setProgress,
       });
@@ -126,6 +126,9 @@ export function EventMediaUploader({
 
       setStatus("Yüklendi.");
       setFile(null);
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
       router.refresh();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Upload başarısız.");
@@ -137,17 +140,23 @@ export function EventMediaUploader({
   return (
     <div className="space-y-2 rounded-md border border-white/10 bg-white/[0.04] p-3">
       <Label>{label}</Label>
-      <Input
+      <input
+        ref={inputRef}
         type="file"
         accept={accept}
+        className="sr-only"
         onChange={(event) => {
-          setFile(event.target.files?.[0] ?? null);
+          const selectedFile = event.target.files?.[0] ?? null;
+          setFile(selectedFile);
           setStatus(null);
           setProgress(0);
+          if (selectedFile) {
+            void upload(selectedFile);
+          }
         }}
       />
-      <Button type="button" onClick={() => void upload()} disabled={pending || !file} variant="secondary">
-        {pending ? "Yükleniyor..." : "Yükle"}
+      <Button type="button" onClick={() => inputRef.current?.click()} disabled={pending} variant="secondary">
+        {pending ? "Yükleniyor..." : "Dosya seç ve yükle"}
       </Button>
       {pending || progress > 0 ? (
         <div className="space-y-1">

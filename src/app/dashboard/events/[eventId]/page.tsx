@@ -6,6 +6,7 @@ import {
   createPollAction,
   deleteEventAction,
   deleteEventVideoAction,
+  setEventVideoUrlAction,
   updateEventAction,
 } from "@/app/dashboard/events/actions";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
@@ -78,7 +79,7 @@ export default async function ManageEventPage({ params }: PageProps) {
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
       <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <DashboardSidebar username={profile.username} />
+        <DashboardSidebar username={profile.username} isAdmin />
         <div className="min-w-0 space-y-4">
         <EventStatusWatcher eventId={typedEvent.id} initialStatus={typedEvent.status} />
         <header className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -141,8 +142,27 @@ export default async function ManageEventPage({ params }: PageProps) {
             <Card>
               <CardHeader><CardTitle>Medya</CardTitle></CardHeader>
               <CardContent className="grid gap-3 lg:grid-cols-2">
-                <EventMediaUploader eventId={typedEvent.id} kind="video" label="Video yükle (mp4/webm, max 1 GB)" accept="video/mp4,video/webm" />
-                <EventMediaUploader eventId={typedEvent.id} kind="thumbnail" label="Thumbnail yükle" accept="image/png,image/jpeg,image/webp,image/gif" />
+                <div className="space-y-3 rounded-md border border-white/10 bg-white/[0.04] p-3 lg:col-span-2">
+                  <form action={setEventVideoUrlAction} className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
+                    <input type="hidden" name="event_id" value={typedEvent.id} />
+                    <div className="space-y-2">
+                      <Label htmlFor="video_url">Video linki</Label>
+                      <Input
+                        id="video_url"
+                        name="video_url"
+                        type="url"
+                        defaultValue={!typedEvent.video_storage_key ? typedEvent.video_url ?? "" : ""}
+                        placeholder="https://.../video.mp4 veya .webm"
+                      />
+                      <p className="text-xs text-zinc-500">
+                        Senkron oynatma için doğrudan oynatılabilir mp4/webm linki kullan.
+                      </p>
+                    </div>
+                    <Button type="submit" variant="secondary">Linki kullan</Button>
+                  </form>
+                </div>
+                <EventMediaUploader eventId={typedEvent.id} kind="video" label="Video dosyası (mp4/webm, max 1 GB)" accept="video/mp4,video/webm" />
+                <EventMediaUploader eventId={typedEvent.id} kind="thumbnail" label="Thumbnail görseli" accept="image/png,image/jpeg,image/webp,image/gif" />
                 {typedEvent.video_storage_key ? (
                   <form action={deleteEventVideoAction}>
                     <input type="hidden" name="event_id" value={typedEvent.id} />

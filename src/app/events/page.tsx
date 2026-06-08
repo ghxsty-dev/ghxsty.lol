@@ -1,11 +1,22 @@
 import Link from "next/link";
-import { Calendar, Home } from "lucide-react";
+import { Calendar, Home, Settings } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import type { WatchEvent } from "@/types/events";
 
 export default async function EventsIndexPage() {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("role,is_admin")
+        .eq("user_id", user.id)
+        .maybeSingle()
+    : { data: null };
+  const canManageEvents = profile?.role === "admin" || profile?.role === "moderator" || profile?.is_admin === true;
   const { data } = await supabase
     .from("events")
     .select("*")
@@ -21,13 +32,24 @@ export default async function EventsIndexPage() {
             <Calendar className="h-7 w-7" />
             Watch Party
           </h1>
-          <Link
-            href="/"
-            className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
-          >
-            <Home className="h-4 w-4" />
-            Ana menü
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            {canManageEvents ? (
+              <Link
+                href="/dashboard/events"
+                className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-white px-4 text-sm font-medium text-zinc-950 transition hover:bg-zinc-200"
+              >
+                <Settings className="h-4 w-4" />
+                Etkinlikleri yönet
+              </Link>
+            ) : null}
+            <Link
+              href="/"
+              className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
+            >
+              <Home className="h-4 w-4" />
+              Ana menü
+            </Link>
+          </div>
         </header>
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {events.length ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useActionState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,13 +32,43 @@ function SaveButton() {
   );
 }
 
-function UploadButton() {
+function AutoUploadButton({
+  inputId,
+  accept,
+  label,
+}: {
+  inputId: string;
+  accept: string;
+  label: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
   const { pending } = useFormStatus();
+
   return (
-    <Button type="submit" variant="secondary" disabled={pending}>
-      <Upload className="h-4 w-4" />
-      {pending ? "Yükleniyor..." : "Yükle"}
-    </Button>
+    <>
+      <input
+        ref={inputRef}
+        id={inputId}
+        name="file"
+        type="file"
+        accept={accept}
+        className="sr-only"
+        onChange={(event) => {
+          if (event.currentTarget.files?.[0]) {
+            event.currentTarget.form?.requestSubmit();
+          }
+        }}
+      />
+      <Button
+        type="button"
+        variant="secondary"
+        disabled={pending}
+        onClick={() => inputRef.current?.click()}
+      >
+        <Upload className="h-4 w-4" />
+        {pending ? "Yükleniyor..." : label}
+      </Button>
+    </>
   );
 }
 
@@ -215,6 +245,7 @@ export function ProfileEditor({
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
       <form action={profileAction} className="space-y-5">
+        <input type="hidden" name="username" value={profile.username} />
         <input type="hidden" name="music_title" value={profile.music_title ?? ""} />
         <input type="hidden" name="theme" value={profile.theme} />
         <input type="hidden" name="avatar_decoration_id" value={profile.avatar_decoration_id ?? ""} />
@@ -230,33 +261,17 @@ export function ProfileEditor({
                 placeholder="Ghxsty"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="username">Kullanıcı adı</Label>
-              <Input
-                id="username"
-                name="username"
-                defaultValue={profile.username}
-                pattern="^[a-z0-9_-]{3,20}$"
-                required
-              />
+            <div className="flex items-end rounded-md border border-white/10 bg-black/20 px-3 py-2">
+              <div>
+                <p className="text-xs text-zinc-500">Public adres</p>
+                <p className="text-sm font-semibold text-white">ghxsty.lol/{profile.username}</p>
+              </div>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
-            <div className="space-y-2">
-              <Label htmlFor="username_password">
-                Kullanıcı adı değişim şifresi
-              </Label>
-              <Input
-                id="username_password"
-                name="username_password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="Sadece kullanıcı adını değiştirirken gerekli"
-              />
-              <p className="text-xs text-zinc-500">
-                Kullanıcı adı 24 saatte en fazla 2 kez değiştirilebilir.
-              </p>
-            </div>
+            <p className="text-xs leading-5 text-zinc-500">
+              Kullanıcı adını değiştirmek için Hesap Ayarları sayfasını kullan.
+            </p>
             <Link
               href="/dashboard/avatar-decorations"
               className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
@@ -457,12 +472,15 @@ export function ProfileEditor({
         {(["avatar_url", "banner_url"] as const).map((field) => (
           <form key={field} action={uploadAction} className="space-y-3">
             <input type="hidden" name="field" value={field} />
-            <Label htmlFor={field}>
+            <Label>
               {field === "avatar_url" ? "Profil fotoğrafı" : "Arka plan görseli"}
             </Label>
-            <Input id={field} name="file" type="file" accept="image/*" />
             <div className="flex flex-wrap gap-2">
-              <UploadButton />
+              <AutoUploadButton
+                inputId={field}
+                accept="image/*"
+                label={field === "avatar_url" ? "Profil fotoğrafı seç ve yükle" : "Arka plan seç ve yükle"}
+              />
               {field === "banner_url" && profile.banner_url ? (
                 <Button formAction={removeImageAction} variant="ghost">
                   <Trash2 className="h-4 w-4" />
@@ -482,12 +500,15 @@ export function ProfileEditor({
           />
           <Input
             id="music_url"
-            name="file"
-            type="file"
-            accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/mp4,audio/x-m4a"
+            name="unused_file_label"
+            type="hidden"
           />
           <div className="flex flex-wrap gap-2">
-            <UploadButton />
+            <AutoUploadButton
+              inputId="music_upload_file"
+              accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/mp4,audio/x-m4a"
+              label="Şarkı seç ve yükle"
+            />
             {profile.music_url ? (
               <Button formAction={removeMusicAction} variant="ghost">
                 <Trash2 className="h-4 w-4" />

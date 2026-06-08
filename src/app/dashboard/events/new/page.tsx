@@ -14,7 +14,7 @@ export default async function NewEventPage() {
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
       <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <DashboardSidebar username={profile.username} />
+        <DashboardSidebar username={profile.username} isAdmin />
         <div className="min-w-0">
         <Link href="/dashboard/events" className="text-sm text-zinc-400 hover:text-white">Events</Link>
         <Card className="mt-4">

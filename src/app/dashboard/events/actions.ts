@@ -241,6 +241,57 @@ export async function deleteEventVideoAction(formData: FormData) {
   revalidatePath(`/events/${eventId}`);
 }
 
+export async function setEventVideoUrlAction(formData: FormData) {
+  const { supabase } = await requireModeratorOrAdmin("/dashboard");
+  const eventId = cleanText(formData.get("event_id"), 80);
+  const videoUrl = cleanText(formData.get("video_url"), 1200);
+
+  if (!eventId) {
+    return;
+  }
+
+  if (!videoUrl) {
+    await deleteEventVideoAction(formData);
+    return;
+  }
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(videoUrl);
+  } catch {
+    revalidatePath(`/dashboard/events/${eventId}`);
+    return;
+  }
+
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    revalidatePath(`/dashboard/events/${eventId}`);
+    return;
+  }
+
+  const { data: event } = await supabase
+    .from("events")
+    .select("video_storage_key")
+    .eq("id", eventId)
+    .maybeSingle();
+
+  await supabase
+    .from("events")
+    .update({
+      video_url: parsedUrl.toString(),
+      video_storage_key: null,
+      is_playing: false,
+      playback_position: 0,
+      playback_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", eventId);
+
+  await deleteR2ObjectByKey(event?.video_storage_key);
+
+  revalidatePath(`/dashboard/events/${eventId}`);
+  revalidatePath(`/events/${eventId}`);
+}
+
 export async function deleteEventAction(formData: FormData) {
   const { supabase } = await requireModeratorOrAdmin("/dashboard");
   const eventId = cleanText(formData.get("event_id"), 80);

@@ -356,6 +356,62 @@ export async function updateProfileAction(
   return { success: "Profil güncellendi." };
 }
 
+export async function updateUsernameAction(
+  _prevState: DashboardState,
+  formData: FormData,
+): Promise<DashboardState> {
+  const { supabase, user, profile } = await getOwnedProfile();
+  const username = normalizeUsername(String(formData.get("username") ?? ""));
+  const usernameError = validateUsername(username);
+
+  if (usernameError) {
+    return { error: usernameError };
+  }
+
+  const password = String(formData.get("username_password") ?? "");
+  const usernameChangeError = await validateUsernameChange(
+    supabase,
+    user,
+    profile,
+    username,
+    password,
+  );
+
+  if (usernameChangeError) {
+    return { error: usernameChangeError };
+  }
+
+  if (username === profile.username) {
+    return { success: "Kullanıcı adı zaten güncel." };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ username, updated_at: new Date().toISOString() })
+    .eq("id", profile.id);
+
+  if (error) {
+    return {
+      error:
+        error.code === "23505"
+          ? "Bu kullanıcı adı zaten alınmış."
+          : `Kullanıcı adı güncellenemedi: ${error.message}`,
+    };
+  }
+
+  await supabase.from("username_change_logs").insert({
+    profile_id: profile.id,
+    old_username: profile.username,
+    new_username: username,
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/account");
+  revalidatePath(`/${profile.username}`);
+  revalidatePath(`/${username}`);
+  return { success: "Kullanıcı adı güncellendi." };
+}
+
 export async function setAvatarDecorationAction(formData: FormData) {
   const { supabase, profile } = await getOwnedProfile();
   const decorationId = String(formData.get("avatar_decoration_id") ?? "").trim();

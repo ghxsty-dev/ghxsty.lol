@@ -15,7 +15,8 @@ import {
 import { signOutAction } from "@/app/(auth)/actions";
 import { cn } from "@/lib/utils";
 
-const items = [
+function getItems(canManageEvents: boolean) {
+  return [
   {
     href: "/dashboard",
     label: "Dashboard",
@@ -33,7 +34,7 @@ const items = [
     Icon: Sparkles,
   },
   {
-    href: "/dashboard/events",
+    href: canManageEvents ? "/dashboard/events" : "/events",
     label: "Etkinlikler",
     Icon: Calendar,
   },
@@ -42,14 +43,18 @@ const items = [
     label: "Hesap Ayarları",
     Icon: Settings,
   },
-];
+  ];
+}
 
 export function DashboardSidebar({
   username,
+  isAdmin = false,
 }: {
   username?: string | null;
+  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
+  const items = getItems(isAdmin);
 
   return (
     <aside className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">

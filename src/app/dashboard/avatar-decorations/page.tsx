@@ -33,7 +33,7 @@ export default async function AvatarDecorationsPage() {
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
       <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <DashboardSidebar username={profile.username} />
+        <DashboardSidebar username={profile.username} isAdmin={profile.role === "admin" || profile.is_admin === true} />
         <div className="min-w-0">
         <header className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
