@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { EventAnnouncements } from "@/components/watch-party/EventAnnouncements";
 import { EventChat } from "@/components/watch-party/EventChat";
 import { EventLayout } from "@/components/watch-party/EventLayout";
+import { EventMeta } from "@/components/watch-party/EventMeta";
 import { EventPolls } from "@/components/watch-party/EventPoll";
 import { EventStatusWatcher } from "@/components/watch-party/EventStatusWatcher";
 import { SyncedVideoPlayer } from "@/components/watch-party/SyncedVideoPlayer";
@@ -100,6 +101,13 @@ export default async function EventPage({ params }: PageProps) {
   }
 
   const canModerate = isModeratorOrAdminRole(profile?.role) || profile?.is_admin === true;
+  const { data: creator } = event.created_by
+    ? await supabase
+        .from("profiles")
+        .select("username,display_name,avatar_url")
+        .eq("user_id", event.created_by)
+        .maybeSingle()
+    : { data: null };
 
   return (
     <main className="min-h-screen bg-[#050507] p-3 text-white sm:p-4">
@@ -108,8 +116,7 @@ export default async function EventPage({ params }: PageProps) {
         <header className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Watch Party</p>
-            <h1 className="mt-2 text-2xl font-bold">{event.title}</h1>
-            {event.description ? <p className="mt-2 text-sm text-zinc-400">{event.description}</p> : null}
+            <p className="mt-2 text-sm text-zinc-400">Etkinlik alanı</p>
           </div>
           <Link
             href="/"
@@ -120,7 +127,19 @@ export default async function EventPage({ params }: PageProps) {
           </Link>
         </header>
         <EventLayout
-          player={<SyncedVideoPlayer initialEvent={event as WatchEvent} isAdmin={canModerate} />}
+          player={
+            <>
+              <SyncedVideoPlayer initialEvent={event as WatchEvent} isAdmin={canModerate} />
+              <EventMeta
+                eventId={event.id}
+                title={event.title}
+                description={event.description}
+                creator={creator}
+                currentUserId={user?.id ?? null}
+                currentDisplayName={profile?.display_name || profile?.username || null}
+              />
+            </>
+          }
           chat={
             <EventChat
               eventId={event.id}

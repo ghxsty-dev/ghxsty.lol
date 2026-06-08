@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { Calendar, Home, Settings } from "lucide-react";
+import { Calendar, CalendarPlus, Home, Settings, Trash2 } from "lucide-react";
+import { deleteEventAction } from "@/app/dashboard/events/actions";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import type { WatchEvent } from "@/types/events";
@@ -17,11 +19,16 @@ export default async function EventsIndexPage() {
         .maybeSingle()
     : { data: null };
   const canManageEvents = profile?.role === "admin" || profile?.role === "moderator" || profile?.is_admin === true;
-  const { data } = await supabase
+  let eventsRequest = supabase
     .from("events")
     .select("*")
-    .in("status", ["scheduled", "live"])
     .order("starts_at", { ascending: true, nullsFirst: false });
+
+  eventsRequest = canManageEvents
+    ? eventsRequest.neq("status", "deleted")
+    : eventsRequest.in("status", ["scheduled", "live"]);
+
+  const { data } = await eventsRequest;
   const events = (data ?? []) as WatchEvent[];
 
   return (
@@ -35,11 +42,11 @@ export default async function EventsIndexPage() {
           <div className="flex flex-wrap gap-2">
             {canManageEvents ? (
               <Link
-                href="/dashboard/events"
+                href="/events/new"
                 className="inline-flex h-10 w-fit items-center justify-center gap-2 rounded-md bg-white px-4 text-sm font-medium text-zinc-950 transition hover:bg-zinc-200"
               >
-                <Settings className="h-4 w-4" />
-                Etkinlikleri yönet
+                <CalendarPlus className="h-4 w-4" />
+                Event oluştur
               </Link>
             ) : null}
             <Link
@@ -54,8 +61,7 @@ export default async function EventsIndexPage() {
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {events.length ? (
             events.map((event) => (
-              <Link key={event.id} href={`/events/${event.id}`}>
-                <Card className="h-full overflow-hidden transition hover:-translate-y-0.5 hover:bg-white/[0.08]">
+              <Card key={event.id} className="h-full overflow-hidden transition hover:-translate-y-0.5 hover:bg-white/[0.08]">
                   {event.thumbnail_url ? (
                     <div className="aspect-video bg-cover bg-center" style={{ backgroundImage: `url(${event.thumbnail_url})` }} />
                   ) : null}
@@ -63,9 +69,34 @@ export default async function EventsIndexPage() {
                     <span className="rounded-md border border-white/10 bg-white/10 px-2 py-1 text-xs text-zinc-300">{event.status}</span>
                     <h2 className="mt-3 text-lg font-semibold">{event.title}</h2>
                     {event.description ? <p className="mt-2 line-clamp-2 text-sm text-zinc-400">{event.description}</p> : null}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Link
+                        href={`/events/${event.id}`}
+                        className="inline-flex h-9 items-center justify-center rounded-md border border-white/10 bg-white/10 px-3 text-sm font-medium text-white transition hover:bg-white/15"
+                      >
+                        Katıl
+                      </Link>
+                      {canManageEvents ? (
+                        <>
+                          <Link
+                            href={`/events/${event.id}/manage`}
+                            className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-white px-3 text-sm font-medium text-zinc-950 transition hover:bg-zinc-200"
+                          >
+                            <Settings className="h-4 w-4" />
+                            Yönet
+                          </Link>
+                          <form action={deleteEventAction}>
+                            <input type="hidden" name="event_id" value={event.id} />
+                            <Button type="submit" size="sm" variant="destructive">
+                              <Trash2 className="h-4 w-4" />
+                              Sil
+                            </Button>
+                          </form>
+                        </>
+                      ) : null}
+                    </div>
                   </CardContent>
                 </Card>
-              </Link>
             ))
           ) : (
             <p className="rounded-lg border border-white/10 bg-white/[0.04] p-6 text-zinc-400 md:col-span-2 xl:col-span-3">

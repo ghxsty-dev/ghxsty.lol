@@ -1,6 +1,6 @@
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { createEventAction } from "@/app/dashboard/events/actions";
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,14 +9,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { requireModeratorOrAdmin } from "@/lib/permissions";
 
 export default async function NewEventPage() {
-  const { profile } = await requireModeratorOrAdmin("/dashboard");
+  await requireModeratorOrAdmin("/events");
 
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
-      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <DashboardSidebar username={profile.username} isAdmin />
-        <div className="min-w-0">
-        <Link href="/dashboard/events" className="text-sm text-zinc-400 hover:text-white">Events</Link>
+      <div className="mx-auto max-w-3xl">
+        <Link href="/events" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white">
+          <ArrowLeft className="h-4 w-4" />
+          Etkinlikler
+        </Link>
         <Card className="mt-4">
           <CardHeader>
             <CardTitle>Yeni Watch Party Event</CardTitle>
@@ -39,7 +40,6 @@ export default async function NewEventPage() {
             </form>
           </CardContent>
         </Card>
-        </div>
       </div>
     </main>
   );

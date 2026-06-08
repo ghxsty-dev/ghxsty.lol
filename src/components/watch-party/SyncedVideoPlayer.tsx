@@ -30,6 +30,17 @@ function isIframeEmbedUrl(url?: string | null) {
   }
 }
 
+function formatTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return "0:00";
+  }
+
+  const totalSeconds = Math.floor(seconds);
+  const minutes = Math.floor(totalSeconds / 60);
+  const remainingSeconds = totalSeconds % 60;
+  return `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
 export function SyncedVideoPlayer({
   initialEvent,
   isAdmin,
@@ -44,6 +55,8 @@ export function SyncedVideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [volume, setVolume] = useState(80);
   const [muted, setMuted] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const isEmbed = isIframeEmbedUrl(event.video_url);
 
   const syncToState = useCallback((nextEvent = event) => {
@@ -165,6 +178,16 @@ export function SyncedVideoPlayer({
     setMuted(safeVolume === 0);
   }
 
+  function updateVideoTime() {
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+
+    setCurrentTime(video.currentTime);
+    setDuration(Number.isFinite(video.duration) ? video.duration : 0);
+  }
+
   return (
     <div
       ref={wrapperRef}
@@ -199,9 +222,11 @@ export function SyncedVideoPlayer({
               data-watch-party-video="true"
               src={event.video_url}
               poster={event.thumbnail_url ?? undefined}
-              controls={isAdmin}
+              controls={false}
               playsInline
               className="relative z-10 aspect-video w-full bg-transparent object-contain fullscreen:max-h-screen"
+              onLoadedMetadata={updateVideoTime}
+              onTimeUpdate={updateVideoTime}
               onPlay={() => {
                 if (!isAdmin && !event.is_playing) {
                   syncToState();
@@ -219,6 +244,7 @@ export function SyncedVideoPlayer({
               }}
             />
           )}
+          {!isEmbed ? (
           <button
             type="button"
             onClick={() => void toggleFullscreen()}
@@ -227,6 +253,7 @@ export function SyncedVideoPlayer({
           >
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
+          ) : null}
           {!isEmbed ? (
           <div className="absolute bottom-3 left-3 z-20 flex h-10 items-center gap-2 rounded-md border border-white/10 bg-black/60 px-3 text-white backdrop-blur">
             <button
@@ -248,6 +275,9 @@ export function SyncedVideoPlayer({
             />
             <span className="w-8 text-right text-xs text-zinc-300">
               {muted ? 0 : volume}
+            </span>
+            <span className="ml-1 border-l border-white/10 pl-3 text-xs tabular-nums text-zinc-300">
+              {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           </div>
           ) : null}

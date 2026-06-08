@@ -29,7 +29,7 @@ async function insertCommand({
   position?: number | null;
   payload?: Record<string, unknown> | null;
 }) {
-  const { supabase, user } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase, user } = await requireModeratorOrAdmin("/events");
   await supabase.from("event_commands").insert({
     event_id: eventId,
     type,
@@ -40,7 +40,7 @@ async function insertCommand({
 }
 
 export async function createEventAction(formData: FormData) {
-  const { supabase, user } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase, user } = await requireModeratorOrAdmin("/events");
   const title = cleanText(formData.get("title"), 120);
   const description = cleanText(formData.get("description"), 1000);
   const startsAt = cleanText(formData.get("starts_at"), 80);
@@ -61,14 +61,14 @@ export async function createEventAction(formData: FormData) {
     .select("id")
     .single();
 
-  revalidatePath("/dashboard/events");
+  revalidatePath("/events");
   if (data?.id) {
-    redirect(`/dashboard/events/${data.id}`);
+    redirect(`/events/${data.id}/manage`);
   }
 }
 
 export async function updateEventAction(formData: FormData) {
-  const { supabase } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase } = await requireModeratorOrAdmin("/events");
   const eventId = cleanText(formData.get("event_id"), 80);
   const title = cleanText(formData.get("title"), 120);
   const description = cleanText(formData.get("description"), 1000);
@@ -91,8 +91,8 @@ export async function updateEventAction(formData: FormData) {
     })
     .eq("id", eventId);
 
-  revalidatePath("/dashboard/events");
-  revalidatePath(`/dashboard/events/${eventId}`);
+  revalidatePath("/events");
+  revalidatePath(`/events/${eventId}/manage`);
   revalidatePath(`/events/${eventId}`);
 }
 
@@ -107,12 +107,12 @@ export async function finalizeEventUploadAction({
   publicUrl: string;
   key: string;
 }) {
-  const { supabase } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase } = await requireModeratorOrAdmin("/events");
 
   if (kind === "video") {
     const { data: event } = await supabase
       .from("events")
-      .select("video_storage_key")
+      .select("video_storage_key, video_url")
       .eq("id", eventId)
       .maybeSingle();
 
@@ -125,22 +125,38 @@ export async function finalizeEventUploadAction({
       })
       .eq("id", eventId);
 
-    if (event?.video_storage_key && event.video_storage_key !== key) {
-      await deleteR2ObjectByKey(event.video_storage_key);
-    }
+    await Promise.all([
+      event?.video_storage_key && event.video_storage_key !== key
+        ? deleteR2ObjectByKey(event.video_storage_key)
+        : Promise.resolve(),
+      event?.video_url && event.video_url !== publicUrl
+        ? deleteR2ObjectByUrl(event.video_url)
+        : Promise.resolve(),
+    ]);
   } else {
+    const { data: event } = await supabase
+      .from("events")
+      .select("thumbnail_url")
+      .eq("id", eventId)
+      .maybeSingle();
+
     await supabase
       .from("events")
       .update({ thumbnail_url: publicUrl, updated_at: new Date().toISOString() })
       .eq("id", eventId);
+
+    if (event?.thumbnail_url && event.thumbnail_url !== publicUrl) {
+      await deleteR2ObjectByUrl(event.thumbnail_url);
+    }
   }
 
-  revalidatePath(`/dashboard/events/${eventId}`);
+  revalidatePath("/events");
+  revalidatePath(`/events/${eventId}/manage`);
   revalidatePath(`/events/${eventId}`);
 }
 
 export async function playbackAction(formData: FormData) {
-  const { supabase } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase } = await requireModeratorOrAdmin("/events");
   const eventId = cleanText(formData.get("event_id"), 80);
   const command = cleanText(formData.get("command"), 20) as EventCommandType | "restart";
   const position = command === "restart" ? 0 : parsePosition(formData.get("position"));
@@ -186,12 +202,13 @@ export async function playbackAction(formData: FormData) {
     await insertCommand({ eventId, type: "seek", position });
   }
 
-  revalidatePath(`/dashboard/events/${eventId}`);
+  revalidatePath("/events");
+  revalidatePath(`/events/${eventId}/manage`);
   revalidatePath(`/events/${eventId}`);
 }
 
 export async function endEventAction(formData: FormData) {
-  const { supabase } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase } = await requireModeratorOrAdmin("/events");
   const eventId = cleanText(formData.get("event_id"), 80);
   const now = new Date();
 
@@ -211,21 +228,24 @@ export async function endEventAction(formData: FormData) {
     .eq("id", eventId);
 
   await insertCommand({ eventId, type: "end" });
-  revalidatePath("/dashboard/events");
-  revalidatePath(`/dashboard/events/${eventId}`);
+  revalidatePath("/events");
+  revalidatePath(`/events/${eventId}/manage`);
   revalidatePath(`/events/${eventId}`);
 }
 
 export async function deleteEventVideoAction(formData: FormData) {
-  const { supabase } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase } = await requireModeratorOrAdmin("/events");
   const eventId = cleanText(formData.get("event_id"), 80);
   const { data: event } = await supabase
     .from("events")
-    .select("video_storage_key")
+    .select("video_storage_key, video_url")
     .eq("id", eventId)
     .maybeSingle();
 
-  await deleteR2ObjectByKey(event?.video_storage_key);
+  await Promise.all([
+    deleteR2ObjectByKey(event?.video_storage_key),
+    deleteR2ObjectByUrl(event?.video_url),
+  ]);
   await supabase
     .from("events")
     .update({
@@ -237,12 +257,13 @@ export async function deleteEventVideoAction(formData: FormData) {
     })
     .eq("id", eventId);
 
-  revalidatePath(`/dashboard/events/${eventId}`);
+  revalidatePath("/events");
+  revalidatePath(`/events/${eventId}/manage`);
   revalidatePath(`/events/${eventId}`);
 }
 
 export async function setEventVideoUrlAction(formData: FormData) {
-  const { supabase } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase } = await requireModeratorOrAdmin("/events");
   const eventId = cleanText(formData.get("event_id"), 80);
   const videoUrl = cleanText(formData.get("video_url"), 1200);
 
@@ -259,18 +280,18 @@ export async function setEventVideoUrlAction(formData: FormData) {
   try {
     parsedUrl = new URL(videoUrl);
   } catch {
-    revalidatePath(`/dashboard/events/${eventId}`);
+    revalidatePath(`/events/${eventId}/manage`);
     return;
   }
 
   if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    revalidatePath(`/dashboard/events/${eventId}`);
+    revalidatePath(`/events/${eventId}/manage`);
     return;
   }
 
   const { data: event } = await supabase
     .from("events")
-    .select("video_storage_key")
+    .select("video_storage_key, video_url")
     .eq("id", eventId)
     .maybeSingle();
 
@@ -286,14 +307,18 @@ export async function setEventVideoUrlAction(formData: FormData) {
     })
     .eq("id", eventId);
 
-  await deleteR2ObjectByKey(event?.video_storage_key);
+  await Promise.all([
+    deleteR2ObjectByKey(event?.video_storage_key),
+    deleteR2ObjectByUrl(event?.video_url),
+  ]);
 
-  revalidatePath(`/dashboard/events/${eventId}`);
+  revalidatePath("/events");
+  revalidatePath(`/events/${eventId}/manage`);
   revalidatePath(`/events/${eventId}`);
 }
 
 export async function deleteEventAction(formData: FormData) {
-  const { supabase } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase } = await requireModeratorOrAdmin("/events");
   const eventId = cleanText(formData.get("event_id"), 80);
 
   if (!eventId) {
@@ -302,26 +327,26 @@ export async function deleteEventAction(formData: FormData) {
 
   const { data: event } = await supabase
     .from("events")
-    .select("video_storage_key, thumbnail_url")
+    .select("video_storage_key, video_url, thumbnail_url")
     .eq("id", eventId)
     .maybeSingle();
 
   await Promise.all([
     deleteR2ObjectByKey(event?.video_storage_key),
+    deleteR2ObjectByUrl(event?.video_url),
     deleteR2ObjectByUrl(event?.thumbnail_url),
   ]);
 
   await supabase.from("events").delete().eq("id", eventId);
 
   revalidatePath("/events");
-  revalidatePath("/dashboard/events");
   revalidatePath(`/events/${eventId}`);
-  revalidatePath(`/dashboard/events/${eventId}`);
-  redirect("/dashboard/events");
+  revalidatePath(`/events/${eventId}/manage`);
+  redirect("/events");
 }
 
 export async function createAnnouncementAction(formData: FormData) {
-  const { supabase, user } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase, user } = await requireModeratorOrAdmin("/events");
   const eventId = cleanText(formData.get("event_id"), 80);
   const title = cleanText(formData.get("title"), 120);
   const content = cleanText(formData.get("content"), 1000);
@@ -338,12 +363,12 @@ export async function createAnnouncementAction(formData: FormData) {
   });
   await insertCommand({ eventId, type: "announcement", payload: { title, content } });
 
-  revalidatePath(`/dashboard/events/${eventId}`);
+  revalidatePath(`/events/${eventId}/manage`);
   revalidatePath(`/events/${eventId}`);
 }
 
 export async function createPollAction(formData: FormData) {
-  const { supabase, user } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase, user } = await requireModeratorOrAdmin("/events");
   const eventId = cleanText(formData.get("event_id"), 80);
   const question = cleanText(formData.get("question"), 200);
   const options = ["option_1", "option_2", "option_3", "option_4"]
@@ -371,12 +396,12 @@ export async function createPollAction(formData: FormData) {
     await insertCommand({ eventId, type: "poll_created", payload: { poll_id: poll.id } });
   }
 
-  revalidatePath(`/dashboard/events/${eventId}`);
+  revalidatePath(`/events/${eventId}/manage`);
   revalidatePath(`/events/${eventId}`);
 }
 
 export async function closePollAction(formData: FormData) {
-  const { supabase } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase } = await requireModeratorOrAdmin("/events");
   const eventId = cleanText(formData.get("event_id"), 80);
   const pollId = cleanText(formData.get("poll_id"), 80);
 
@@ -386,7 +411,7 @@ export async function closePollAction(formData: FormData) {
     .eq("id", pollId);
   await insertCommand({ eventId, type: "poll_closed", payload: { poll_id: pollId } });
 
-  revalidatePath(`/dashboard/events/${eventId}`);
+  revalidatePath(`/events/${eventId}/manage`);
   revalidatePath(`/events/${eventId}`);
 }
 
@@ -415,6 +440,6 @@ export async function deleteMessageAction(formData: FormData) {
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", messageId);
 
-  revalidatePath(`/dashboard/events/${eventId}`);
+  revalidatePath(`/events/${eventId}/manage`);
   revalidatePath(`/events/${eventId}`);
 }

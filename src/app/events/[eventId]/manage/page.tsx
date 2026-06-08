@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import {
   createAnnouncementAction,
   createPollAction,
@@ -9,15 +9,14 @@ import {
   setEventVideoUrlAction,
   updateEventAction,
 } from "@/app/dashboard/events/actions";
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { AdminPlaybackControls } from "@/components/watch-party/AdminPlaybackControls";
 import { EventChat } from "@/components/watch-party/EventChat";
 import { EventMediaUploader } from "@/components/watch-party/EventMediaUploader";
+import { EventMeta } from "@/components/watch-party/EventMeta";
 import { EventPolls } from "@/components/watch-party/EventPoll";
 import { EventStatusWatcher } from "@/components/watch-party/EventStatusWatcher";
 import { SyncedVideoPlayer } from "@/components/watch-party/SyncedVideoPlayer";
-import { Button } from "@/components/ui/button";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,7 +56,7 @@ async function loadPolls(
 
 export default async function ManageEventPage({ params }: PageProps) {
   const { eventId } = await params;
-  const { supabase, user, profile } = await requireModeratorOrAdmin("/dashboard");
+  const { supabase, user, profile } = await requireModeratorOrAdmin("/events");
   const [{ data: event }, { data: messages }, polls] = await Promise.all([
     supabase.from("events").select("*").eq("id", eventId).maybeSingle(),
     supabase
@@ -75,17 +74,25 @@ export default async function ManageEventPage({ params }: PageProps) {
   }
 
   const typedEvent = event as WatchEvent;
+  const { data: creator } = typedEvent.created_by
+    ? await supabase
+        .from("profiles")
+        .select("username,display_name,avatar_url")
+        .eq("user_id", typedEvent.created_by)
+        .maybeSingle()
+    : { data: null };
 
   return (
     <main className="min-h-screen bg-[#050507] p-4 text-white">
-      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <DashboardSidebar username={profile.username} isAdmin />
-        <div className="min-w-0 space-y-4">
+      <div className="mx-auto max-w-[1500px] space-y-4">
         <EventStatusWatcher eventId={typedEvent.id} initialStatus={typedEvent.status} />
         <header className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <Link href="/dashboard/events" className="text-sm text-zinc-400 hover:text-white">Events</Link>
-            <h1 className="mt-2 text-3xl font-bold">{typedEvent.title}</h1>
+            <Link href="/events" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-white">
+              <ArrowLeft className="h-4 w-4" />
+              Etkinlikler
+            </Link>
+            <p className="mt-2 text-sm text-zinc-400">Event yönetimi</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link href={`/events/${typedEvent.id}`} className={buttonVariants({ variant: "secondary" })}>
@@ -104,6 +111,14 @@ export default async function ManageEventPage({ params }: PageProps) {
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="space-y-4">
             <SyncedVideoPlayer initialEvent={typedEvent} isAdmin />
+            <EventMeta
+              eventId={typedEvent.id}
+              title={typedEvent.title}
+              description={typedEvent.description}
+              creator={creator}
+              currentUserId={user.id}
+              currentDisplayName={profile.display_name || profile.username}
+            />
             <AdminPlaybackControls event={typedEvent} />
 
             <Card>
@@ -152,10 +167,10 @@ export default async function ManageEventPage({ params }: PageProps) {
                         name="video_url"
                         type="url"
                         defaultValue={!typedEvent.video_storage_key ? typedEvent.video_url ?? "" : ""}
-                        placeholder="https://.../video.mp4 veya .webm"
+                        placeholder="https://.../video.mp4, .webm veya embed link"
                       />
                       <p className="text-xs text-zinc-500">
-                        Senkron oynatma için doğrudan oynatılabilir mp4/webm linki kullan.
+                        R2 video veya doğrudan video linklerinde senkron kontrol çalışır. Embed linkler player içinde açılır.
                       </p>
                     </div>
                     <Button type="submit" variant="secondary">Linki kullan</Button>
@@ -163,10 +178,10 @@ export default async function ManageEventPage({ params }: PageProps) {
                 </div>
                 <EventMediaUploader eventId={typedEvent.id} kind="video" label="Video dosyası (mp4/webm, max 1 GB)" accept="video/mp4,video/webm" />
                 <EventMediaUploader eventId={typedEvent.id} kind="thumbnail" label="Thumbnail görseli" accept="image/png,image/jpeg,image/webp,image/gif" />
-                {typedEvent.video_storage_key ? (
+                {typedEvent.video_url ? (
                   <form action={deleteEventVideoAction}>
                     <input type="hidden" name="event_id" value={typedEvent.id} />
-                    <Button type="submit" variant="destructive">Videoyu R2’den sil</Button>
+                    <Button type="submit" variant="destructive">Videoyu sil</Button>
                   </form>
                 ) : null}
               </CardContent>
@@ -208,7 +223,6 @@ export default async function ManageEventPage({ params }: PageProps) {
               </CardContent>
             </Card>
           </aside>
-        </div>
         </div>
       </div>
     </main>

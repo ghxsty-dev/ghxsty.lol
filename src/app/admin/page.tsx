@@ -72,7 +72,7 @@ export default async function AdminPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link
-              href="/dashboard/events"
+              href="/events"
               className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/15"
             >
               <Calendar className="h-4 w-4" />
@@ -93,7 +93,7 @@ export default async function AdminPage() {
                 ["#temalari-yonet", "Temaları yönet"],
                 ["/admin/users", "Üyeleri yönet"],
                 ["#avatar-dekorasyonlari", "Avatar dekorasyonları"],
-                ["/dashboard/events", "Eventleri yönet"],
+                ["/events", "Eventleri yönet"],
               ].map(([href, label]) => (
                 <Link
                   key={href}

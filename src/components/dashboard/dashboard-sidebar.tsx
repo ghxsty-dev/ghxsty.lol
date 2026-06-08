@@ -15,7 +15,7 @@ import {
 import { signOutAction } from "@/app/(auth)/actions";
 import { cn } from "@/lib/utils";
 
-function getItems(canManageEvents: boolean) {
+function getItems() {
   return [
   {
     href: "/dashboard",
@@ -34,7 +34,7 @@ function getItems(canManageEvents: boolean) {
     Icon: Sparkles,
   },
   {
-    href: canManageEvents ? "/dashboard/events" : "/events",
+    href: "/events",
     label: "Etkinlikler",
     Icon: Calendar,
   },
@@ -48,13 +48,12 @@ function getItems(canManageEvents: boolean) {
 
 export function DashboardSidebar({
   username,
-  isAdmin = false,
 }: {
   username?: string | null;
   isAdmin?: boolean;
 }) {
   const pathname = usePathname();
-  const items = getItems(isAdmin);
+  const items = getItems();
 
   return (
     <aside className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">

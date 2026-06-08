@@ -23,6 +23,22 @@ type GifResult = {
   height: number;
 };
 
+function getPresenceKey(eventId: string, currentUserId?: string | null) {
+  if (currentUserId) {
+    return currentUserId;
+  }
+
+  const storageKey = `watch-party-presence:${eventId}`;
+  const existing = window.localStorage.getItem(storageKey);
+  if (existing) {
+    return existing;
+  }
+
+  const next = crypto.randomUUID();
+  window.localStorage.setItem(storageKey, next);
+  return next;
+}
+
 export function EventChat({
   eventId,
   initialMessages,
@@ -91,13 +107,14 @@ export function EventChat({
 
   useEffect(() => {
     const displayName = currentDisplayName?.trim() || "Bir kullanıcı";
+    const presenceKey = getPresenceKey(eventId, currentUserId);
     const presenceChannel = supabase
-      .channel(`event-presence:${eventId}`, {
-        config: { presence: { key: currentUserId ?? crypto.randomUUID() } },
+      .channel(`event-chat-presence:${eventId}`, {
+        config: { presence: { key: presenceKey } },
       })
       .on("presence", { event: "join" }, ({ newPresences }) => {
         for (const presence of newPresences as Array<{ user_id?: string; name?: string }>) {
-          if (presence.user_id && presence.user_id === currentUserId) {
+          if (presence.user_id && presence.user_id === presenceKey) {
             continue;
           }
 
@@ -116,7 +133,7 @@ export function EventChat({
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
           await presenceChannel.track({
-            user_id: currentUserId,
+            user_id: presenceKey,
             name: displayName,
             joined_at: new Date().toISOString(),
           });

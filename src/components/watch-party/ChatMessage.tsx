@@ -53,20 +53,20 @@ export function ChatMessage({
     return (
       <div className="flex gap-3 rounded-md px-2 py-0.5 transition hover:bg-white/[0.04]">
         <div className="w-10 shrink-0" />
-        <div className="min-w-0 flex-1 pl-3">
+        <div className="min-w-0 flex-1">
           {message.message_type === "gif" && message.gif_url ? (
-            <div className="my-1 overflow-hidden rounded-md border border-white/10 bg-black/30">
+            <div className="my-1 w-fit max-w-full overflow-hidden rounded-md border border-white/10 bg-black/30">
               <Image
                 src={message.gif_url}
                 alt={message.message}
                 width={260}
                 height={180}
                 unoptimized
-                className="max-h-64 w-auto max-w-full object-contain"
+                className="block max-h-64 w-auto max-w-full object-contain"
               />
             </div>
           ) : (
-            <p className="whitespace-pre-wrap break-words text-sm leading-5 text-zinc-200">
+            <p className="whitespace-pre-wrap break-words text-sm leading-[1.15rem] text-zinc-200">
               {message.message}
             </p>
           )}
@@ -117,18 +117,18 @@ export function ChatMessage({
         </div>
         <div className="text-xs text-zinc-500">@{username}</div>
         {message.message_type === "gif" && message.gif_url ? (
-          <div className="mt-2 overflow-hidden rounded-md border border-white/10 bg-black/30">
+          <div className="mt-2 w-fit max-w-full overflow-hidden rounded-md border border-white/10 bg-black/30">
             <Image
               src={message.gif_url}
               alt={message.message}
               width={260}
               height={180}
               unoptimized
-              className="max-h-64 w-auto max-w-full object-contain"
+              className="block max-h-64 w-auto max-w-full object-contain"
             />
           </div>
         ) : (
-          <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5 text-zinc-200">
+          <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-[1.15rem] text-zinc-200">
             {message.message}
           </p>
         )}
