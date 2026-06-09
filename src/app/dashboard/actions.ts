@@ -650,6 +650,22 @@ export async function uploadMusicAction(
   return { success: "Şarkı yüklendi." };
 }
 
+export async function updateMusicTitleAction(formData: FormData): Promise<void> {
+  const { supabase, profile } = await getOwnedProfile();
+  const musicTitle = String(formData.get("music_title") ?? "").trim();
+
+  await supabase
+    .from("profiles")
+    .update({
+      music_title: musicTitle || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", profile.id);
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/${profile.username}`);
+}
+
 export async function removeMusicAction(): Promise<void> {
   const { supabase, profile } = await getOwnedProfile();
 

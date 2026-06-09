@@ -55,7 +55,7 @@ export function validateImage(file: File) {
   }
 
   if (file.size > MAX_UPLOAD_SIZE) {
-    return "Dosya boyutu 10 MB sınırını aşamaz.";
+    return "10 MB üstü görsel yüklenemez.";
   }
 
   return null;
@@ -72,7 +72,7 @@ export function validateAudio(file: File) {
   }
 
   if (file.size > MAX_AUDIO_UPLOAD_SIZE) {
-    return "Şarkı dosyası 10 MB sınırını aşamaz.";
+    return "10 MB üstü şarkı yüklenemez.";
   }
 
   return null;

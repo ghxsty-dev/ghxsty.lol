@@ -42,12 +42,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 });
   }
 
-  if (kind === "video" && (!VIDEO_TYPES.includes(contentType) || size > MAX_VIDEO_SIZE)) {
-    return NextResponse.json({ error: "Video mp4/webm olmalı ve 1 GB sınırını aşmamalı." }, { status: 400 });
+  if (kind === "video" && !VIDEO_TYPES.includes(contentType)) {
+    return NextResponse.json({ error: "Video mp4 veya webm olmalı." }, { status: 400 });
   }
 
-  if (kind === "thumbnail" && (!THUMBNAIL_TYPES.includes(contentType) || size > MAX_THUMBNAIL_SIZE)) {
-    return NextResponse.json({ error: "Thumbnail jpg/png/webp/gif olmalı ve 10 MB sınırını aşmamalı." }, { status: 400 });
+  if (kind === "video" && size > MAX_VIDEO_SIZE) {
+    return NextResponse.json({ error: "1 GB üstü video yüklenemez." }, { status: 400 });
+  }
+
+  if (kind === "thumbnail" && !THUMBNAIL_TYPES.includes(contentType)) {
+    return NextResponse.json({ error: "Thumbnail jpg, png, webp veya gif olmalı." }, { status: 400 });
+  }
+
+  if (kind === "thumbnail" && size > MAX_THUMBNAIL_SIZE) {
+    return NextResponse.json({ error: "10 MB üstü görsel yüklenemez." }, { status: 400 });
   }
 
   const resolvedExtension =

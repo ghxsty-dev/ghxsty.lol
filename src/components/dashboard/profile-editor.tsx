@@ -10,6 +10,7 @@ import {
   disconnectDiscordAction,
   removeImageAction,
   removeMusicAction,
+  updateMusicTitleAction,
   updateProfileAction,
   uploadImageAction,
   uploadMusicAction,
@@ -485,12 +486,18 @@ export function ProfileEditor({
         ))}
         <form action={musicAction} className="space-y-3">
           <Label htmlFor="music_url">Profil şarkısı</Label>
-          <Input
-            id="music_upload_title"
-            name="music_title"
-            defaultValue={profile.music_title ?? ""}
-            placeholder="Şarkı adı"
-          />
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <Input
+              id="music_upload_title"
+              name="music_title"
+              defaultValue={profile.music_title ?? ""}
+              placeholder="Şarkı adı"
+            />
+            <Button type="submit" formAction={updateMusicTitleAction} variant="secondary">
+              <Save className="h-4 w-4" />
+              Kaydet
+            </Button>
+          </div>
           <Input
             id="music_url"
             name="unused_file_label"
@@ -516,45 +523,6 @@ export function ProfileEditor({
             </p>
           ) : null}
         </form>
-        {profile.music_url ? (
-          <form action={profileAction} className="space-y-3 rounded-md border border-white/10 bg-white/[0.04] p-3">
-            <input type="hidden" name="username" value={profile.username} />
-            <input type="hidden" name="display_name" value={profile.display_name ?? ""} />
-            <input type="hidden" name="bio" value={profile.bio ?? ""} />
-            <input type="hidden" name="theme" value={profile.theme} />
-            <input type="hidden" name="avatar_decoration_id" value={profile.avatar_decoration_id ?? ""} />
-            <input type="hidden" name="accent_color" value={profile.accent_color ?? "#ffffff"} />
-            <input type="hidden" name="page_background_color" value={profile.page_background_color ?? "#050507"} />
-            <input type="hidden" name="panel_background_color" value={profile.panel_background_color ?? "#111113"} />
-            <input type="hidden" name="text_color" value={profile.text_color ?? "#ffffff"} />
-            <input type="hidden" name="muted_text_color" value={profile.muted_text_color ?? "#d4d4d8"} />
-            <input type="hidden" name="button_background_color" value={profile.button_background_color ?? "#ffffff"} />
-            <input type="hidden" name="button_text_color" value={profile.button_text_color ?? "#ffffff"} />
-            <input type="hidden" name="header_background_style" value={profile.header_background_style ?? "gradient"} />
-            <input type="hidden" name="header_color" value={profile.header_color ?? "#74d9bf"} />
-            <input type="hidden" name="header_color_to" value={profile.header_color_to ?? "#2f9d8f"} />
-            {(profile.header_enabled ?? true) ? <input type="hidden" name="header_enabled" value="on" /> : null}
-            {(profile.panel_visible ?? true) ? <input type="hidden" name="panel_visible" value="on" /> : null}
-            {(profile.links_icon_only ?? false) ? <input type="hidden" name="links_icon_only" value="on" /> : null}
-            {(profile.music_show_volume ?? true) ? <input type="hidden" name="music_show_volume" value="on" /> : null}
-            {(profile.discord_show_presence ?? true) ? <input type="hidden" name="discord_show_presence" value="on" /> : null}
-            <input type="hidden" name="music_volume_position" value={profile.music_volume_position ?? "top-right"} />
-            <input type="hidden" name="background_blur" value={profile.background_blur ?? 10} />
-            <input type="hidden" name="panel_opacity" value={profile.panel_opacity ?? 70} />
-            <input type="hidden" name="button_opacity" value={profile.button_opacity ?? 12} />
-            <input type="hidden" name="panel_radius" value={profile.panel_radius ?? 8} />
-            <input type="hidden" name="button_radius" value={profile.button_radius ?? 6} />
-            <input type="hidden" name="background_style" value={profile.background_style ?? "soft"} />
-            <input type="hidden" name="button_style" value={profile.button_style ?? "glass"} />
-            <input type="hidden" name="font_style" value={profile.font_style ?? "clean"} />
-            <input type="hidden" name="display_name_effect" value={profile.display_name_effect ?? "none"} />
-            <div className="space-y-2">
-              <Label htmlFor="music_title">Şarkı adı</Label>
-              <Input id="music_title" name="music_title" defaultValue={profile.music_title ?? ""} />
-            </div>
-            <SaveButton />
-          </form>
-        ) : null}
         <StateMessage state={uploadState} />
         <StateMessage state={musicState} />
       </div>

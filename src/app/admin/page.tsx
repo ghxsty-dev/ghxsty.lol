@@ -13,6 +13,7 @@ import {
   updateAvatarDecorationAction,
   updateCommunityThemeAction,
 } from "@/app/admin/actions";
+import { AdminThemeMediaFields } from "@/components/admin/admin-theme-media-fields";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -111,7 +112,7 @@ export default async function AdminPage() {
             <CardTitle>Admin Tema Oluştur</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={createCommunityThemeFromAdminAction} className="space-y-4">
+            <form id="admin-theme-create-form" action={createCommunityThemeFromAdminAction} className="space-y-4">
               <div className="grid gap-4 lg:grid-cols-4">
                 <div className="space-y-2">
                   <Label htmlFor="admin-theme-name">Tema adı</Label>
@@ -123,20 +124,7 @@ export default async function AdminPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 rounded-lg border border-white/10 bg-white/[0.035] p-4 lg:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="admin-theme-banner">Arka plan görseli</Label>
-                  <Input id="admin-theme-banner" name="banner_file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="admin-theme-music">Tema şarkısı</Label>
-                  <Input id="admin-theme-music" name="music_file" type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/mp4,audio/x-m4a" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="admin-theme-music-title">Şarkı adı</Label>
-                  <Input id="admin-theme-music-title" name="music_title" placeholder="Profil şarkısı" />
-                </div>
-              </div>
+              <AdminThemeMediaFields />
 
               <div className="grid gap-4 rounded-lg border border-white/10 bg-white/[0.035] p-4 sm:grid-cols-2 lg:grid-cols-5">
                 <div className="space-y-2">
